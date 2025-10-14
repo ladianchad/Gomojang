@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Real-time Sensor Monitor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; }
+        .container { max-width: 1200px; margin: auto; padding: 20px; }
+        .latest-data { background: #f0f0f0; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        h1, h2 { color: #333; }
+        /* Style to arrange the 4 charts in a 2x2 grid */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .chart-container {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Real-time Sensor Data</h1>
+        <div class="latest-data">
+            <p><strong>Time:</strong> <span id="latest-time">-</span></p>
+            <p><strong>Temperature:</strong> <span id="latest-temp">-</span> &deg;C</p>
+            <p><strong>Humidity:</strong> <span id="latest-humidity">-</span> %</p>
+            <p><strong>CO2:</strong> <span id="latest-co2">-</span> ppm</p>
+            <p><strong>Weight:</strong> <span id="latest-weight">-</span> g</p>
+        </div>
+
+        <!-- HTML structure for 4 individual charts -->
+        <div class="chart-grid">
+            <div class="chart-container">
+                <h2>Temperature</h2>
+                <canvas id="temperatureChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h2>Humidity</h2>
+                <canvas id="humidityChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h2>CO2</h2>
+                <canvas id="co2Chart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h2>Weight</h2>
+                <canvas id="weightChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Get references to all the HTML elements
+    const timeEl = document.getElementById('latest-time');
+    const tempEl = document.getElementById('latest-temp');
+    const humidityEl = document.getElementById('latest-humidity');
+    const co2El = document.getElementById('latest-co2');
+    const weightEl = document.getElementById('latest-weight');
+
+    // Variables to hold the 4 chart instances
+    let temperatureChart, humidityChart, co2Chart, weightChart;
+
+    async function updateLatestData() {
+        const response = await fetch('/latest_data_api/');
+        const data = await response.json();
+
+        timeEl.textContent = data.timestamp;
+        tempEl.textContent = data.temperature;
+        humidityEl.textContent = data.humidity;
+        co2El.textContent = data.co2;
+        // Format weight to 2 decimal places
+        weightEl.textContent = data.weight ? data.weight.toFixed(2) : 'N/A';
+    }
+
+    // Helper function to create common chart options
+    function createChartOptions(yAxisLabel) {
+        return {
+            elements: {
+                line: { tension: 0.1, fill: false },
+                point: { radius: 3 }
+            },
+            scales: {
+                x: { display: true, title: { display: true, text: 'Time' } },
+                y: { display: true, title: { display: true, text: yAxisLabel } }
+            }
+        };
+    }
+    async function drawOrUpdateCharts() {
+        const response = await fetch('/historical_data_api/');
+        const data = await response.json();
+        
+        // --- Logic to update data for the 4 charts ---
+        if (temperatureChart) {
+            const chartInstances = [temperatureChart, humidityChart, co2Chart, weightChart];
+            const dataKeys = ['temperature', 'humidity', 'co2', 'weight'];
+            
+            chartInstances.forEach((chart, index) => {
+                chart.data.labels = data.labels;
+                chart.data.datasets[0].data = data[dataKeys[index]];
+                chart.update();
+            });
+            return;
+        }
+
+        // --- Logic to create the 4 charts for the first time ---
+        const tempCtx = document.getElementById('temperatureChart').getContext('2d');
+        temperatureChart = new Chart(tempCtx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Temperature (\xB0C)',
+                    data: data.temperature,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                }]
+            },
+            options: createChartOptions('Temperature (\xB0C)')
+        });
+        const humidityCtx = document.getElementById('humidityChart').getContext('2d');
+        humidityChart = new Chart(humidityCtx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Humidity (%)',
+                    data: data.humidity,
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                }]
+            },
+            options: createChartOptions('Humidity (%)')
+        });
+
+        const co2Ctx = document.getElementById('co2Chart').getContext('2d');
+        co2Chart = new Chart(co2Ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'CO2 (ppm)',
+                    data: data.co2,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                }]
+            },
+            options: createChartOptions('CO2 (ppm)')
+        });
+
+        const weightCtx = document.getElementById('weightChart').getContext('2d');
+        weightChart = new Chart(weightCtx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Weight (g)',
+                    data: data.weight,
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                }]
+            },
+            options: createChartOptions('Weight (g)')
+        });
+    }
+
+    drawOrUpdateCharts();
+    updateLatestData();
+
+    setInterval(updateLatestData, 5000);
+    setInterval(drawOrUpdateCharts, 60000);
+
+</script>
+</body>
+</html>
