@@ -1,20 +1,19 @@
-"""
-URL configuration for imojang project.
-"""
 from django.urls import path
-# Import the new view functions we created
-from .views import sensor_dashboard_view, latest_data_api, historical_data_api
+from . import views
 
 urlpatterns = [
-    # 1. The URL for the main dashboard page that users will see.
-    # e.g., http://your-raspberry-pi-ip/dashboard/
-    path('dashboard/', sensor_dashboard_view, name='dashboard'),
+    # 1. Main dashboard page
+    path('dashboard/', views.sensor_dashboard_view, name='dashboard'),
 
-    # 2. The API endpoint for the JavaScript to get the latest sensor values.
-    # This URL must match the 'fetch' URL in your sensor_display.html file.
-    path('latest_data_api/', latest_data_api, name='latest_data_api'),
+    # 2. API for latest data (for Tab 1)
+    path('latest_data_api/', views.latest_data_api, name='latest_data_api'),
 
-    # 3. The API endpoint for the JavaScript to get historical data for the graph.
-    # This also needs to match the 'fetch' URL in your HTML.
-    path('historical_data_api/', historical_data_api, name='historical_data_api'),
+    # 3. API for historical graph data (for Tab 2)
+    path('historical_data_api/', views.historical_data_api, name='historical_data_api'),
+
+    # 4. API for live calibration actions (for Tab 4)
+    path('calibration_api/', views.calibration_api, name='calibration_api'),
+    
+    # 5. API to get and save calibration settings (for Tab 4)
+    path('settings_api/', views.settings_api, name='settings_api'),
 ]
