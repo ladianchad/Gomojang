@@ -3,46 +3,39 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Gomojang Dashboard</title>
+    <title>怨좎젙 紐⑤땲?곕쭅 ?μ튂</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
-    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; background-color: #f0f2f5; color: #333; margin: 0; }
-        .container { max-width: 1400px; margin: auto; padding: 20px; }
+        .container { max-width: 1600px; margin: auto; padding: 20px; } /* Increased max-width */
         h1 { color: #1a2b4d; }
         h2 { color: #33475b; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 40px; }
         h3 { margin-top: 30px; color: #555; font-weight: 500; padding-bottom: 5px; border-bottom: 1px solid #eee; }
-        
         .tab-nav { overflow: hidden; border-bottom: 1px solid #ccc; background-color: #fff; border-radius: 8px 8px 0 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .tab-nav button { background-color: inherit; float: left; border: none; outline: none; cursor: pointer; padding: 14px 16px; transition: 0.3s; font-size: 17px; }
+        /* --- MODIFIED --- */
+        .tab-nav button { background-color: inherit; float: left; border: none; outline: none; cursor: pointer; padding: 14px 16px; transition: 0.3s; font-size: 17px; color: black; } /* Set default color to black */
         .tab-nav button:hover { background-color: #f1f1f1; }
-        .tab-nav button.active { background-color: #007bff; color: black; }
-        
+        .tab-nav button.active { background-color: #007bff; color: black; } /* Ensured active is also black */
         .tab-content { display: none; padding: 20px 12px; border-top: none; background-color: #fff; border-radius: 0 0 8px 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
         .tab-content.active { display: block; }
-        
         .data-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
         .data-card { background-color: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.2s; }
         .data-card:hover { transform: translateY(-5px); }
         .data-card .label { font-size: 1rem; color: #555; margin-bottom: 10px; }
         .data-card .value { font-size: 2.2rem; font-weight: bold; color: #1a2b4d; }
         .data-card .unit { font-size: 1rem; color: #777; margin-left: 5px; }
-
         .chart-container { position: relative; height: 40vh; width: 100%; margin-top: 20px; }
-        .calibration-section { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+        .calibration-section { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
         .calibration-box { padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #fdfdfd;}
-        
         button, input, select, textarea { padding: 10px 15px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; }
         button { background-color: #007bff; color: white; cursor: pointer; border-color: #007bff; transition: background-color 0.2s; }
         button:hover { background-color: #0056b3; }
         button:disabled { background-color: #aaa; cursor: not-allowed; border-color: #aaa; }
-        
         .journal-layout { display: grid; grid-template-columns: 320px 1fr 1fr; gap: 20px; min-height: 600px; }
         .journal-display, .journal-form { padding: 0 20px; }
-        #journal-calendar-container { border-right: 1px solid #eee; padding-right: 20px; }
+        .journal-calendar-container { border-right: 1px solid #eee; padding-right: 20px; }
         .journal-display { border-right: 1px solid #eee; }
         .journal-display img { max-width: 100%; border-radius: 8px; margin-top: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); min-height: 200px; background-color: #f0f0f0; object-fit: cover; aspect-ratio: 4 / 3; }
         .journal-display h4 { margin: 15px 0 5px 0; }
@@ -52,7 +45,6 @@
         .status-success { background-color: #d4edda; color: #155724; }
         .status-error { background-color: #f8d7da; color: #721c24; }
         .status-info { background-color: #cce5ff; color: #004085; }
-        
         .page-footer { margin-top: 40px; padding: 20px; background-color: #fff; border-radius: 8px; display: flex; align-items: center; gap: 20px; }
         .page-footer img { width: 100px; height: 100px; border-radius: 8px; background-color: white; padding: 5px; border: 1px solid #ddd; }
         .footer-text p { margin: 0; color: #555; }
@@ -62,47 +54,49 @@
 <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
 
 <div class="container">
-    <h1>Gomojang Smart Farm Dashboard</h1>
+    <h1>怨좎젙 紐⑤땲?곕쭅 ?μ튂</h1>
 
     <div class="tab-nav">
-        <button class="tab-button active" onclick="showTab(event, 'realtime')">Real-time Data</button>
-        <button class="tab-button" onclick="showTab(event, 'graphs')">Graphs</button>
-        <button class="tab-button" onclick="showTab(event, 'journal')">Farm Journal</button>
-        <button class="tab-button" onclick="showTab(event, 'calibration')">Calibration</button>
+        <button class="tab-button active" data-tab="realtime">?ㅼ떆媛?/button>
+        <button class="tab-button" data-tab="graphs">洹몃옒??/button>
+        <button class="tab-button" data-tab="journal">?띿옣 ?쇨린</button>
+        <button class="tab-button" data-tab="calibration">蹂댁젙</button>
     </div>
 
     <!-- Tab 1: Real-time Data -->
     <div id="realtime" class="tab-content active">
-        <h2>Live Sensor Readings</h2>
-        <h3>Environment</h3>
+        <h2>?ㅼ떆媛??쇱꽌 ?곗씠??/h2>
+        <h3>?섍꼍</h3>
         <div class="data-grid">
-            <div class="data-card"><div class="label">Air Temperature</div><div class="value" id="latest-air_temperature">-</div><span class="unit">*C</span></div>
-            <div class="data-card"><div class="label">Air Humidity</div><div class="value" id="latest-air_humidity">-</div><span class="unit">%</span></div>
+            <div class="data-card"><div class="label">?⑤룄</div><div class="value" id="latest-air_temperature">-</div><span class="unit">*C</span></div>
+            <div class="data-card"><div class="label">?듬룄</div><div class="value" id="latest-air_humidity">-</div><span class="unit">%</span></div>
             <div class="data-card"><div class="label">CO2</div><div class="value" id="latest-co2">-</div><span class="unit">ppm</span></div>
             <div class="data-card"><div class="label">Light</div><div class="value" id="latest-lux">-</div><span class="unit">lx</span></div>
         </div>
-        <h3>Water & Weight</h3>
+        <h3>臾닿쾶</h3>
         <div class="data-grid">
-            <div class="data-card"><div class="label">Weight</div><div class="value" id="latest-weight_calibrated">-</div><span class="unit">g</span></div>
-            <div class="data-card"><div class="label">Water pH</div><div class="value" id="latest-ph_calibrated">-</div><span class="unit"></span></div>
-            <div class="data-card"><div class="label">Water EC</div><div class="value" id="latest-ec_calibrated">-</div><span class="unit">uS/cm</span></div>
+            <div class="data-card"><div class="label">臾닿쾶</div><div class="value" id="latest-weight_calibrated">-</div><span class="unit">g</span></div>
+            <!-- NEW: Water Temp Card -->
+            <div class="data-card"><div class="label">?섏삩</div><div class="value" id="latest-water_temperature">-</div><span class="unit">*C</span></div>
+            <div class="data-card"><div class="label">pH</div><div class="value" id="latest-ph_calibrated">-</div><span class="unit"></span></div>
+            <div class="data-card"><div class="label">EC</div><div class="value" id="latest-ec_calibrated">-</div><span class="unit">uS/cm</span></div>
         </div>
-        <h3>Soil</h3>
+        <h3>?좎뼇</h3>
         <div class="data-grid">
-            <div class="data-card"><div class="label">Soil Temperature</div><div class="value" id="latest-soil_temperature">-</div><span class="unit">*C</span></div>
-            <div class="data-card"><div class="label">Soil Humidity</div><div class="value" id="latest-soil_humidity">-</div><span class="unit">%</span></div>
-            <div class="data-card"><div class="label">Soil EC</div><div class="value" id="latest-soil_conductivity">-</div><span class="unit">uS/cm</span></div>
-            <div class="data-card"><div class="label">Soil pH</div><div class="value" id="latest-soil_ph">-</div><span class="unit"></span></div>
+            <div class="data-card"><div class="label">?좎뼇 ?⑤룄</div><div class="value" id="latest-soil_temperature">-</div><span class="unit">*C</span></div>
+            <div class="data-card"><div class="label">?좎뼇 ?듬룄</div><div class="value" id="latest-soil_humidity">-</div><span class="unit">%</span></div>
+            <div class="data-card"><div class="label">?좎뼇 EC</div><div class="value" id="latest-soil_conductivity">-</div><span class="unit">uS/cm</span></div>
+            <div class="data-card"><div class="label">?좎뼇 pH</div><div class="value" id="latest-soil_ph">-</div><span class="unit"></span></div>
         </div>
         <p style="text-align: center; margin-top: 20px; color: #888;">Last updated: <span id="latest-timestamp">-</span></p>
     </div>
 
     <!-- Tab 2: Graphs -->
     <div id="graphs" class="tab-content">
-        <h2>Historical Data</h2>
+        <h2>?곗씠??洹몃옒??/h2>
         <div class="graph-controls">
             <label for="timespan-select">Select Time Range:</label>
-            <select id="timespan-select" onchange="updateAllCharts()">
+            <select id="timespan-select">
                 <option value="10m">Last 10 Minutes</option>
                 <option value="1h" selected>Last Hour</option>
                 <option value="24h">Last 24 Hours</option>
@@ -114,7 +108,7 @@
         <div class="chart-container"><canvas id="waterChart"></canvas></div>
         <div class="chart-container"><canvas id="soilChart"></canvas></div>
     </div>
-
+    
     <!-- Tab 3: Farm Journal -->
     <div id="journal" class="tab-content">
         <h2>Farm Journal</h2>
@@ -123,7 +117,7 @@
                 <input type="text" id="journal-calendar" style="display:none;">
             </div>
             <div class="journal-display">
-                <h3><span id="display-date">----??--??--??/span> ?띿뾽 ?쇨린</h3>
+                <h3><span id="display-date">----??-??-??/span> ?띿뾽 ?쇨린</h3>
                 <div id="journal-content-display">
                     <p>Please select a date from the calendar.</p>
                 </div>
@@ -133,7 +127,7 @@
                 <h3>Write & Edit Journal</h3>
                 <form id="journal-entry-form">
                     <input type="hidden" id="form-date">
-                    <label for="farm_work">1. ?띿옉??</label>
+                    <label for="farm_work">1. ?띿옉??/label>
                     <textarea id="farm_work" name="farm_work"></textarea><br><br>
                     <label for="pesticide">2. ?띿빟:</label>
                     <textarea id="pesticide" name="pesticide"></textarea><br><br>
@@ -143,7 +137,7 @@
                     <textarea id="harvest" name="harvest"></textarea><br><br>
                     <label for="notes">5. ?뱀씠?ы빆:</label>
                     <textarea id="notes" name="notes"></textarea><br><br>
-                    <button type="button" onclick="saveJournalEntry()">Save Journal</button>
+                    <button type="button" onclick=saveJournalEntry()>?쇨린 ???/button>
                     <div id="journal-status" class="status-message"></div>
                 </form>
             </div>
@@ -152,40 +146,57 @@
 
     <!-- Tab 4: Calibration -->
     <div id="calibration" class="tab-content">
-        <!-- Calibration content is unchanged -->
+        <!-- NEW 3-column layout -->
         <div class="calibration-section">
             <div class="calibration-box">
-                <h2>Weight Sensor Calibration</h2>
-                <p><strong>Current Offset:</strong> <span id="current-offset">...</span></p>
-                <p><strong>Current Scale Factor:</strong> <span id="current-scale">...</span></p>
+                <h2>Weight Sensor</h2>
+                <p><strong>Offset:</strong> <span id="current-offset">...</span></p>
+                <p><strong>Scale Factor:</strong> <span id="current-scale">...</span></p>
                 <hr>
-                <p><strong>Step 1: Tare (Zero) the Scale</strong><br>Remove all weight and click Tare.</p>
-                <button id="tare-btn" onclick="performTare()">Tare</button>
+                <p><strong>Step 1: Tare</strong><br>Remove all weight and click.</p>
+                <button id="tare-btn">Tare</button>
                 <br><br>
-                <p><strong>Step 2: Calibrate with Known Weight</strong><br>Place known weight, enter value, and click Calibrate.</p>
-                <input type="number" id="known-weight" placeholder="e.g., 100"> <span>grams</span>
-                <button id="calibrate-btn" onclick="performWeightCalibrate()" disabled>Calibrate</button>
+                <p><strong>Step 2: Calibrate</strong><br>Place known weight, enter value.</p>
+                <input type="number" id="known-weight" placeholder="e.g., 100"> <span>g</span>
+                <button id="calibrate-btn" disabled>Calibrate</button>
                 <div id="weight-status" class="status-message"></div>
             </div>
             <div class="calibration-box">
-                <h2>pH Sensor Calibration (Two-Point)</h2>
-                <p><strong>Current Slope:</strong> <span id="current-slope">...</span></p>
-                <p><strong>Current Intercept:</strong> <span id="current-intercept">...</span></p>
+                <h2>pH Sensor</h2>
+                <p><strong>Slope:</strong> <span id="current-ph-slope">...</span></p>
+                <p><strong>Intercept:</strong> <span id="current-ph-intercept">...</span></p>
                 <hr>
-                <p><strong>Step 1: Calibrate Point 1 (e.g., pH 7.0)</strong><br>Place probe in solution, enter pH, and click.</p>
+                <p><strong>Point 1 (e.g., pH 7.0)</strong></p>
                 <input type="number" step="0.1" id="ph-val-1" value="7.0">
-                <button id="ph-cal-btn-1" onclick="performPhCalibrate(1)">Read Voltage for Point 1</button>
-                <p><em>Recorded Voltage: <span id="ph-volt-1">...</span></em></p>
+                <button id="ph-cal-btn-1">Read Voltage</button>
+                <p><em>Voltage: <span id="ph-volt-1">...</span></em></p>
                 <br>
-                <p><strong>Step 2: Calibrate Point 2 (e.g., pH 4.0)</strong><br>Rinse, place in second solution, enter pH, and click.</p>
+                <p><strong>Point 2 (e.g., pH 4.0)</strong></p>
                 <input type="number" step="0.1" id="ph-val-2" value="4.0">
-                <button id="ph-cal-btn-2" onclick="performPhCalibrate(2)">Read Voltage for Point 2</button>
-                <p><em>Recorded Voltage: <span id="ph-volt-2">...</span></em></p>
+                <button id="ph-cal-btn-2">Read Voltage</button>
+                <p><em>Voltage: <span id="ph-volt-2">...</span></em></p>
                 <div id="ph-status" class="status-message"></div>
+            </div>
+            <!-- --- NEW EC CALIBRATION BOX --- -->
+            <div class="calibration-box">
+                <h2>EC Sensor</h2>
+                <p><strong>Slope:</strong> <span id="current-ec-slope">...</span></p>
+                <p><strong>Intercept:</strong> <span id="current-ec-intercept">...</span></p>
+                <hr>
+                <p><strong>Point 1 (e.g., 700 uS/cm)</strong></p>
+                <input type="number" id="ec-val-1" value="700">
+                <button id="ec-cal-btn-1">Read Voltage</button>
+                <p><em>Base Voltage: <span id="ec-volt-1">...</span></em></p>
+                <br>
+                <p><strong>Point 2 (e.g., 1500 uS/cm)</strong></p>
+                <input type="number" id="ec-val-2" value="1500">
+                <button id="ec-cal-btn-2">Read Voltage</button>
+                <p><em>Base Voltage: <span id="ec-volt-2">...</span></em></p>
+                <div id="ec-status" class="status-message"></div>
             </div>
         </div>
          <div style="text-align:center; margin-top: 30px;">
-            <button id="save-settings-btn" onclick="saveSettings()">Save All Calibration Settings</button>
+            <button id="save-settings-btn">Save All Calibration Settings</button>
             <div id="save-status" class="status-message" style="margin: 15px auto 0; max-width: 500px;"></div>
         </div>
     </div>
@@ -200,98 +211,119 @@
 </footer>
 
 <script>
-const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-let charts = {};
-let calibrationState = {};
-let calendar;
+document.addEventListener('DOMContentLoaded', () => {
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    let charts = {};
+    let calibrationState = {};
+    let calendar;
 
-function showTab(evt, tabName) {
-    document.querySelectorAll(".tab-content").forEach(el => el.style.display = "none");
-    document.querySelectorAll(".tab-button").forEach(el => el.classList.remove("active"));
-    document.getElementById(tabName).style.display = "block";
-    evt.currentTarget.classList.add("active");
-
-    if (tabName === 'graphs' && Object.keys(charts).length === 0) initializeCharts();
-    if (tabName === 'calibration') loadSettings();
-    if (tabName === 'journal') initializeCalendar();
-}
-
-async function fetchWithTimeout(url, options = {}, timeout = 15000) {
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeout);
-    if (options.method === 'POST') {
-        options.headers = { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken, ...options.headers };
-    }
-    try {
-        const response = await fetch(url, { ...options, signal: controller.signal });
-        clearTimeout(id);
-        return response;
-    } catch (error) {
-        clearTimeout(id);
-        throw error;
-    }
-}
-
-async function updateLatestData() {
-    try {
-        const response = await fetchWithTimeout('/latest_data_api/');
-        if (!response.ok) return;
-        const data = await response.json();
-        if (data.status === 'error') return;
-        
-        document.getElementById('latest-timestamp').textContent = data.timestamp;
-        const fields = ['air_temperature', 'air_humidity', 'co2', 'lux', 'weight_calibrated', 'ph_calibrated', 'ec_calibrated', 'soil_temperature', 'soil_humidity', 'soil_conductivity', 'soil_ph'];
-        fields.forEach(field => {
-            const el = document.getElementById(`latest-${field}`);
-            if (el) {
-                const value = data[field];
-                el.textContent = (typeof value === 'number') ? value.toFixed(2) : (value || '-');
-            }
+    // --- Event Listeners ---
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', (event) => {
+            const tabName = event.currentTarget.getAttribute('data-tab');
+            showTab(event.currentTarget, tabName);
         });
-    } catch (error) {
-        if (error.name !== 'AbortError') console.error("Error fetching latest data:", error);
+    });
+    document.getElementById('timespan-select').addEventListener('change', () => updateAllCharts());
+    // document.getElementById('save-journal-btn').addEventListener('click', () => saveJournalEntry()); // This is handled inside the journal tab now
+    // Calibration buttons
+    document.getElementById('tare-btn').addEventListener('click', () => performTare());
+    document.getElementById('calibrate-btn').addEventListener('click', () => performWeightCalibrate());
+    document.getElementById('ph-cal-btn-1').addEventListener('click', () => performPhCalibrate(1));
+    document.getElementById('ph-cal-btn-2').addEventListener('click', () => performPhCalibrate(2));
+    document.getElementById('ec-cal-btn-1').addEventListener('click', () => performEcCalibrate(1)); // New
+    document.getElementById('ec-cal-btn-2').addEventListener('click', () => performEcCalibrate(2)); // New
+    document.getElementById('save-settings-btn').addEventListener('click', () => saveSettings());
+
+    function showTab(buttonElement, tabName) {
+        document.querySelectorAll(".tab-content").forEach(el => el.style.display = "none");
+        document.querySelectorAll(".tab-button").forEach(el => el.classList.remove("active"));
+        document.getElementById(tabName).style.display = "block";
+        buttonElement.classList.add("active");
+
+        if (tabName === 'graphs' && Object.keys(charts).length === 0) initializeCharts();
+        if (tabName === 'calibration') loadSettings();
+        if (tabName === 'journal') initializeCalendar();
     }
-}
 
-function createChart(canvasId, config) {
-    const ctx = document.getElementById(canvasId).getContext('2d');
-    return new Chart(ctx, config);
-}
-
-function initializeCharts() {
-    const commonOptions = { responsive: true, maintainAspectRatio: false };
-    charts.weight = createChart('weightChart', { type: 'line', data: { labels: [], datasets: [{ label: 'Weight (g)', data: [], borderColor: '#8e5ea2', fill: false }] }, options: { ...commonOptions, title: { display: true, text: 'Weight' }, scales: { yAxes: [{ ticks: { suggestedMin: 0 } }] } } });
-    charts.env = createChart('envChart', { type: 'line', data: { labels: [], datasets: [ { label: 'Air Temp (占쏙옙C)', data: [], borderColor: '#ff6384', yAxisID: 'y_temp', fill: false }, { label: 'Air Humidity (%)', data: [], borderColor: '#36a2eb', yAxisID: 'y_hum', fill: false }, { label: 'CO占쏙옙 (ppm)', data: [], borderColor: '#4bc0c0', yAxisID: 'y_co2', fill: false }, { label: 'Lux', data: [], borderColor: '#ffce56', yAxisID: 'y_lux', fill: false } ] }, options: { ...commonOptions, title: { display: true, text: 'Environmental Conditions' }, scales: { yAxes: [ { id: 'y_temp', type: 'linear', position: 'left', ticks: { fontColor: '#ff6384', suggestedMin: 0, suggestedMax: 50 } }, { id: 'y_hum', type: 'linear', position: 'right', ticks: { fontColor: '#36a2eb', suggestedMin: 0, suggestedMax: 100 }, gridLines: { drawOnChartArea: false } }, { id: 'y_co2', type: 'linear', position: 'right', ticks: { fontColor: '#4bc0c0', suggestedMin: 0, suggestedMax: 5000 }, gridLines: { drawOnChartArea: false } }, { id: 'y_lux', type: 'linear', position: 'left', ticks: { fontColor: '#ffce56', suggestedMin: 0, suggestedMax: 60000 }, gridLines: { drawOnChartArea: false }, offset: true } ] } } });
-    charts.water = createChart('waterChart', { type: 'line', data: { labels: [], datasets: [ { label: 'Water pH', data: [], borderColor: '#ff9f40', yAxisID: 'y_ph', fill: false }, { label: 'Water EC (占쏙옙S/cm)', data: [], borderColor: '#c9cbcf', yAxisID: 'y_ec', fill: false } ] }, options: { ...commonOptions, title: { display: true, text: 'Water Quality' }, scales: { yAxes: [ { id: 'y_ph', type: 'linear', position: 'left', ticks: { fontColor: '#ff9f40', suggestedMin: 0, suggestedMax: 14 } }, { id: 'y_ec', type: 'linear', position: 'right', ticks: { fontColor: '#c9cbcf', suggestedMin: 0, suggestedMax: 2500 }, gridLines: { drawOnChartArea: false } } ] } } });
-    charts.soil = createChart('soilChart', { type: 'line', data: { labels: [], datasets: [ { label: 'Soil Temp (占쏙옙C)', data: [], borderColor: '#D9534F', yAxisID: 'y_soil_temp', fill: false }, { label: 'Soil Humidity (%)', data: [], borderColor: '#5CB85C', yAxisID: 'y_soil_hum', fill: false }, { label: 'Soil EC (占쏙옙S/cm)', data: [], borderColor: '#333', yAxisID: 'y_soil_ec', fill: false }, { label: 'Soil pH', data: [], borderColor: '#F0AD4E', yAxisID: 'y_soil_ph', fill: false } ] }, options: { ...commonOptions, title: { display: true, text: 'Soil Conditions' }, scales: { yAxes: [ { id: 'y_soil_temp', type: 'linear', position: 'left', ticks: { fontColor: '#D9534F', suggestedMin: 0, suggestedMax: 50 } }, { id: 'y_soil_hum', type: 'linear', position: 'right', ticks: { fontColor: '#5CB85C', suggestedMin: 0, suggestedMax: 100 }, gridLines: { drawOnChartArea: false } }, { id: 'y_soil_ec', type: 'linear', position: 'right', ticks: { fontColor: '#333', suggestedMin: 0, suggestedMax: 2500 }, gridLines: { drawOnChartArea: false } }, { id: 'y_soil_ph', type: 'linear', position: 'left', ticks: { fontColor: '#F0AD4E', suggestedMin: 0, suggestedMax: 14 }, gridLines: { drawOnChartArea: false }, offset: true } ] } } });
-    updateAllCharts();
-}
-
-async function updateAllCharts() {
-    const timespan = document.getElementById('timespan-select').value;
-    try {
-        const response = await fetchWithTimeout(`/historical_data_api/?timespan=${timespan}`);
-        if (!response.ok) return;
-        const data = await response.json();
-        const map = {
-            weight: { chart: charts.weight, datasets: [data.datasets.weight] },
-            env: { chart: charts.env, datasets: [data.datasets.air_temperature, data.datasets.air_humidity, data.datasets.co2, data.datasets.lux] },
-            water: { chart: charts.water, datasets: [data.datasets.ph, data.datasets.ec] },
-            soil: { chart: charts.soil, datasets: [data.datasets.soil_temperature, data.datasets.soil_humidity, data.datasets.soil_conductivity, data.datasets.soil_ph] }
-        };
-        for (const key in map) {
-            if(map[key].chart) {
-                map[key].chart.data.labels = data.labels;
-                map[key].datasets.forEach((ds, i) => map[key].chart.data.datasets[i].data = ds);
-                map[key].chart.update();
-            }
+    async function fetchWithTimeout(url, options = {}, timeout = 15000) {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), timeout);
+        if (options.method === 'POST') {
+            options.headers = { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken, ...options.headers };
         }
-    } catch (error) {
-        if (error.name !== 'AbortError') console.error("Error updating charts:", error);
+        try {
+            const response = await fetch(url, { ...options, signal: controller.signal });
+            clearTimeout(id);
+            return response;
+        } catch (error) {
+            clearTimeout(id); throw error;
+        }
     }
-}
 
-// --- Tab 3: Farm Journal Logic ---
+    async function updateLatestData() {
+        try {
+            const response = await fetchWithTimeout('/latest_data_api/');
+            if (!response.ok) return;
+            const data = await response.json();
+            if (data.status === 'error') return;
+            
+            document.getElementById('latest-timestamp').textContent = data.timestamp;
+            // Add water_temperature to the fields list
+            const fields = ['air_temperature', 'air_humidity', 'co2', 'lux', 'water_temperature', 'weight_calibrated', 'ph_calibrated', 'ec_calibrated', 'soil_temperature', 'soil_humidity', 'soil_conductivity', 'soil_ph'];
+            fields.forEach(field => {
+                const el = document.getElementById(`latest-${field}`);
+                if (el) {
+                    const value = data[field];
+                    el.textContent = (typeof value === 'number') ? value.toFixed(2) : (value || '-');
+                }
+            });
+        } catch (error) {
+            if (error.name !== 'AbortError') console.error("Error fetching latest data:", error);
+        }
+    }
+
+    function createChart(canvasId, config) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        return new Chart(ctx, config);
+    }
+
+    function initializeCharts() {
+        const commonOptions = { responsive: true, maintainAspectRatio: false };
+        charts.weight = createChart('weightChart', { type: 'line', data: { labels: [], datasets: [{ label: 'Weight (g)', data: [], borderColor: '#8e5ea2', fill: false }] }, options: { ...commonOptions, title: { display: true, text: 'Weight' }, scales: { yAxes: [{ ticks: { suggestedMin: 0 } }] } } });
+        charts.env = createChart('envChart', { type: 'line', data: { labels: [], datasets: [ { label: 'Air Temp (*C)', data: [], borderColor: '#ff6384', yAxisID: 'y_temp', fill: false }, { label: 'Air Humidity (%)', data: [], borderColor: '#36a2eb', yAxisID: 'y_hum', fill: false }, { label: 'CO2 (ppm)', data: [], borderColor: '#4bc0c0', yAxisID: 'y_co2', fill: false }, { label: 'Lux', data: [], borderColor: '#ffce56', yAxisID: 'y_lux', fill: false } ] }, options: { ...commonOptions, title: { display: true, text: 'Environmental Conditions' }, scales: { yAxes: [ { id: 'y_temp', type: 'linear', position: 'left', ticks: { fontColor: '#ff6384', suggestedMin: 0, suggestedMax: 50 } }, { id: 'y_hum', type: 'linear', position: 'right', ticks: { fontColor: '#36a2eb', suggestedMin: 0, suggestedMax: 100 }, gridLines: { drawOnChartArea: false } }, { id: 'y_co2', type: 'linear', position: 'right', ticks: { fontColor: '#4bc0c0', suggestedMin: 0, suggestedMax: 5000 }, gridLines: { drawOnChartArea: false } }, { id: 'y_lux', type: 'linear', position: 'left', ticks: { fontColor: '#ffce56', suggestedMin: 0, suggestedMax: 60000 }, gridLines: { drawOnChartArea: false }, offset: true } ] } } });
+        // --- MODIFIED: Add Water Temp to Water Quality Chart ---
+        charts.water = createChart('waterChart', { type: 'line', data: { labels: [], datasets: [ { label: 'Water pH', data: [], borderColor: '#ff9f40', yAxisID: 'y_ph', fill: false }, { label: 'Water EC (uS/cm)', data: [], borderColor: '#c9cbcf', yAxisID: 'y_ec', fill: false }, { label: 'Water Temp (*C)', data: [], borderColor: '#33A5FF', yAxisID: 'y_wtemp', fill: false } ] }, options: { ...commonOptions, title: { display: true, text: 'Water Quality' }, scales: { yAxes: [ { id: 'y_ph', type: 'linear', position: 'left', ticks: { fontColor: '#ff9f40', suggestedMin: 0, suggestedMax: 14 } }, { id: 'y_ec', type: 'linear', position: 'right', ticks: { fontColor: '#c9cbcf', suggestedMin: 0, suggestedMax: 2500 }, gridLines: { drawOnChartArea: false } }, { id: 'y_wtemp', type: 'linear', position: 'left', offset: true, ticks: { fontColor: '#33A5FF', suggestedMin: 0, suggestedMax: 50 }, gridLines: { drawOnChartArea: false } } ] } } });
+        charts.soil = createChart('soilChart', { type: 'line', data: { labels: [], datasets: [ { label: 'Soil Temp (*C)', data: [], borderColor: '#D9534F', yAxisID: 'y_soil_temp', fill: false }, { label: 'Soil Humidity (%)', data: [], borderColor: '#5CB85C', yAxisID: 'y_soil_hum', fill: false }, { label: 'Soil EC (uS/cm)', data: [], borderColor: '#333', yAxisID: 'y_soil_ec', fill: false }, { label: 'Soil pH', data: [], borderColor: '#F0AD4E', yAxisID: 'y_soil_ph', fill: false } ] }, options: { ...commonOptions, title: { display: true, text: 'Soil Conditions' }, scales: { yAxes: [ { id: 'y_soil_temp', type: 'linear', position: 'left', ticks: { fontColor: '#D9534F', suggestedMin: 0, suggestedMax: 50 } }, { id: 'y_soil_hum', type: 'linear', position: 'right', ticks: { fontColor: '#5CB85C', suggestedMin: 0, suggestedMax: 100 }, gridLines: { drawOnChartArea: false } }, { id: 'y_soil_ec', type: 'linear', position: 'right', ticks: { fontColor: '#333', suggestedMin: 0, suggestedMax: 2500 }, gridLines: { drawOnChartArea: false } }, { id: 'y_soil_ph', type: 'linear', position: 'left', ticks: { fontColor: '#F0AD4E', suggestedMin: 0, suggestedMax: 14 }, gridLines: { drawOnChartArea: false }, offset: true } ] } } });
+        updateAllCharts();
+    }
+
+    async function updateAllCharts() {
+        const timespan = document.getElementById('timespan-select').value;
+        try {
+            const response = await fetchWithTimeout(`/historical_data_api/?timespan=${timespan}`);
+            if (!response.ok) return;
+            const data = await response.json();
+            const map = {
+                weight: { chart: charts.weight, datasets: [data.datasets.weight] },
+                env: { chart: charts.env, datasets: [data.datasets.air_temperature, data.datasets.air_humidity, data.datasets.co2, data.datasets.lux] },
+                // Add water_temperature to the dataset mapping
+                water: { chart: charts.water, datasets: [data.datasets.ph, data.datasets.ec, data.datasets.water_temperature] },
+                soil: { chart: charts.soil, datasets: [data.datasets.soil_temperature, data.datasets.soil_humidity, data.datasets.soil_conductivity, data.datasets.soil_ph] }
+            };
+            for (const key in map) {
+                if(map[key].chart) {
+                    map[key].chart.data.labels = data.labels;
+                    map[key].datasets.forEach((ds, i) => map[key].chart.data.datasets[i].data = ds);
+                    map[key].chart.update();
+                }
+            }
+        } catch (error) {
+            if (error.name !== 'AbortError') console.error("Error updating charts:", error);
+        }
+    }
+
+    // --- Tab 3: Farm Journal Logic ---
 function initializeCalendar() {
     if (calendar) return; // Already initialized
     
@@ -326,7 +358,7 @@ async function loadJournalEntry(date) {
             form.harvest.value = data.harvest || '';
             form.notes.value = data.notes || '';
             displayDiv.innerHTML = `
-                <h4>?띿옉??/h4><p>${data.farm_work || '?댁슜?놁쓬'}</p>
+                <h4>?띿옉/h4><p>${data.farm_work || '?댁슜?놁쓬'}</p>
                 <h4>?띿빟</h4><p>${data.pesticide || '?댁슜?놁쓬'}</p>
                 <h4>鍮꾨즺</h4><p>${data.fertilizer || '?댁슜?놁쓬'}</p>
                 <h4>?섑솗</h4><p>${data.harvest || '?댁슜?놁쓬'}</p>
@@ -334,14 +366,13 @@ async function loadJournalEntry(date) {
             `;
         } else {
             form.reset();
-            displayDiv.innerHTML = '<p>?묒꽦???쇱?媛 ?놁뒿?덈떎. ?덈줈 ?묒꽦?댁＜?몄슂.</p>';
+            displayDiv.innerHTML = '<p>?묒꽦 ?쇱?媛 ?놁뒿?덈떎. ?쇱?瑜??묒꽦?댁＜?몄슂.</p>';
         }
     } catch (error) {
         console.error("Error loading journal:", error);
-        setStatus('journal-status', '?쇱?瑜?遺덈윭?ㅻ뒗 ???ㅽ뙣?덉뒿?덈떎.', 'error');
+        setStatus('journal-status', '?쇱?瑜?遺덈윭?ㅻ뒗 ?곗뿉 ?ㅽ뙣?덉뒿?덈떎.', 'error');
     }
 }
-
 async function saveJournalEntry() {
     const date = document.getElementById('form-date').value;
     if (!date) {
@@ -356,7 +387,7 @@ async function saveJournalEntry() {
         harvest: document.getElementById('harvest').value,
         notes: document.getElementById('notes').value,
     };
-    setStatus('journal-status', '???以?..', 'info');
+    setStatus('journal-status', '???以?.', 'info');
     try {
         const response = await fetchWithTimeout('/journal_api/', { method: 'POST', body: JSON.stringify(formData) });
         const result = await response.json();
@@ -367,130 +398,157 @@ async function saveJournalEntry() {
             setStatus('journal-status', `????ㅽ뙣: ${result.message || 'Server error'}`, 'error');
         }
     } catch (error) {
-        setStatus('journal-status', '???以??ㅽ듃?뚰겕 ?ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.', 'error');
+        setStatus('journal-status', '?ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.', 'error');
     }
 }
 
-// --- Tab 4: Calibration Logic ---
-function setStatus(elementId, message, type) {
-    const el = document.getElementById(elementId);
-    el.textContent = message;
-    el.className = `status-message status-${type}`;
-    el.style.display = 'block';
-}
-
-async function performApiAction(action, body = {}) {
-    try {
-        const response = await fetchWithTimeout('/calibration_api/', { method: 'POST', body: JSON.stringify({ action, ...body }) });
-        return await response.json();
-    } catch (error) {
-        return { status: 'error', message: error.name === 'AbortError' ? 'Request timed out. Is read_sensors.py stopped?' : 'A network error occurred.' };
+    // --- Calibration Logic ---
+    function setStatus(elementId, message, type) {
+        const el = document.getElementById(elementId);
+        el.textContent = message;
+        el.className = `status-message status-${type}`;
+        el.style.display = 'block';
     }
-}
+    
+    async function performApiAction(action, body = {}) {
+        try {
+            const response = await fetchWithTimeout('/calibration_api/', { method: 'POST', body: JSON.stringify({ action, ...body }) });
+            return await response.json();
+        } catch (error) {
+            return { status: 'error', message: error.name === 'AbortError' ? 'Request timed out. Is read_sensors.py stopped?' : 'A network error occurred.' };
+        }
+    }
 
-async function performTare() {
-    setStatus('weight-status', 'Taring... Please wait.', 'info');
-    document.getElementById('tare-btn').disabled = true;
-    const result = await performApiAction('tare');
-    if (result.status === 'success') {
-        calibrationState.weight_offset = result.offset;
-        document.getElementById('current-offset').textContent = result.offset.toFixed(2);
+    async function performTare() {
+        setStatus('weight-status', 'Taring...', 'info');
+        document.getElementById('tare-btn').disabled = true;
+        const result = await performApiAction('tare');
+        if (result.status === 'success') {
+            calibrationState.weight_offset = result.offset;
+            document.getElementById('current-offset').textContent = result.offset.toFixed(2);
+            document.getElementById('calibrate-btn').disabled = false;
+            setStatus('weight-status', 'Tare successful!', 'success');
+        } else {
+            setStatus('weight-status', `Error: ${result.message}`, 'error');
+        }
+        document.getElementById('tare-btn').disabled = false;
+    }
+
+    async function performWeightCalibrate() {
+        const knownWeight = parseFloat(document.getElementById('known-weight').value);
+        if (isNaN(knownWeight) || knownWeight <= 0) {
+            setStatus('weight-status', 'Enter a valid weight.', 'error'); return;
+        }
+        setStatus('weight-status', `Calibrating with ${knownWeight}g...`, 'info');
+        document.getElementById('calibrate-btn').disabled = true;
+        const result = await performApiAction('tare');
+        if (result.status === 'success') {
+            const scale = (result.offset - calibrationState.weight_offset) / knownWeight;
+            if (scale === 0) {
+                 setStatus('weight-status', 'Calibration failed: scale is zero.', 'error');
+            } else {
+                calibrationState.weight_scale = scale;
+                document.getElementById('current-scale').textContent = scale.toFixed(4);
+                setStatus('weight-status', 'Calibration successful!', 'success');
+            }
+        } else {
+            setStatus('weight-status', `Error: ${result.message}`, 'error');
+        }
         document.getElementById('calibrate-btn').disabled = false;
-        setStatus('weight-status', 'Tare successful! You can now calibrate.', 'success');
-    } else {
-        setStatus('weight-status', `Error: ${result.message}`, 'error');
     }
-    document.getElementById('tare-btn').disabled = false;
-}
 
-async function performWeightCalibrate() {
-    const knownWeight = parseFloat(document.getElementById('known-weight').value);
-    if (isNaN(knownWeight) || knownWeight <= 0) {
-        setStatus('weight-status', 'Please enter a valid, positive known weight.', 'error');
-        return;
-    }
-    setStatus('weight-status', `Calibrating with ${knownWeight}g...`, 'info');
-    document.getElementById('calibrate-btn').disabled = true;
-    const result = await performApiAction('tare'); // just gets a raw reading
-    if (result.status === 'success') {
-        const scale = (result.offset - calibrationState.weight_offset) / knownWeight;
-        if (scale === 0) {
-             setStatus('weight-status', 'Calibration failed: scale is zero.', 'error');
-        } else {
-            calibrationState.weight_scale = scale;
-            document.getElementById('current-scale').textContent = scale.toFixed(4);
-            setStatus('weight-status', 'Calibration successful!', 'success');
+    async function performPhCalibrate(point) {
+        const phValue = parseFloat(document.getElementById(`ph-val-${point}`).value);
+        if (isNaN(phValue)) {
+            setStatus('ph-status', `Point ${point} pH value is invalid.`, 'error'); return;
         }
-    } else {
-        setStatus('weight-status', `Error: ${result.message}`, 'error');
-    }
-    document.getElementById('calibrate-btn').disabled = false;
-}
-
-async function performPhCalibrate(point) {
-    const phValue = parseFloat(document.getElementById(`ph-val-${point}`).value);
-    if (isNaN(phValue)) {
-        setStatus('ph-status', `Point ${point} pH value is invalid.`, 'error');
-        return;
-    }
-    setStatus('ph-status', `Reading voltage for Point ${point}...`, 'info');
-    document.getElementById(`ph-cal-btn-${point}`).disabled = true;
-    const result = await performApiAction('get_ph_voltage');
-    if (result.status === 'success') {
-        calibrationState[`ph_point${point}_voltage`] = result.voltage;
-        calibrationState[`ph_point${point}_value`] = phValue;
-        document.getElementById(`ph-volt-${point}`).textContent = result.voltage.toFixed(4);
-        setStatus('ph-status', `Voltage for Point ${point} recorded.`, 'success');
-    } else {
-        setStatus('ph-status', `Error: ${result.message}`, 'error');
-    }
-    document.getElementById(`ph-cal-btn-${point}`).disabled = false;
-}
-
-async function loadSettings() {
-    try {
-        const response = await fetchWithTimeout('/settings_api/');
-        if (!response.ok) throw new Error("Server error.");
-        const data = await response.json();
-        calibrationState = data;
-        document.getElementById('current-offset').textContent = data.weight_offset.toFixed(2);
-        document.getElementById('current-scale').textContent = data.weight_scale.toFixed(4);
-        document.getElementById('ph-val-1').value = data.ph_point1_value.toFixed(1);
-        document.getElementById('ph-volt-1').textContent = data.ph_point1_voltage.toFixed(4);
-        document.getElementById('ph-val-2').value = data.ph_point2_value.toFixed(1);
-        document.getElementById('ph-volt-2').textContent = data.ph_point2_voltage.toFixed(4);
-        document.getElementById('current-slope').textContent = data.ph_slope.toFixed(4);
-        document.getElementById('current-intercept').textContent = data.ph_intercept.toFixed(4);
-    } catch(error) {
-        console.error("Could not load settings", error);
-        setStatus('save-status', 'Could not load settings from server.', 'error');
-    }
-}
-
-async function saveSettings() {
-    setStatus('save-status', 'Saving...', 'info');
-    try {
-        const response = await fetchWithTimeout('/settings_api/', { method: 'POST', body: JSON.stringify(calibrationState) });
-        const result = await response.json();
-        if (response.ok) {
-            setStatus('save-status', 'Settings saved successfully!', 'success');
-            loadSettings();
+        setStatus('ph-status', `Reading voltage for Point ${point}...`, 'info');
+        document.getElementById(`ph-cal-btn-${point}`).disabled = true;
+        const result = await performApiAction('get_ph_voltage');
+        if (result.status === 'success') {
+            calibrationState[`ph_point${point}_voltage`] = result.voltage;
+            calibrationState[`ph_point${point}_value`] = phValue;
+            document.getElementById(`ph-volt-${point}`).textContent = result.voltage.toFixed(4);
+            setStatus('ph-status', `Voltage for Point ${point} recorded.`, 'success');
         } else {
-            setStatus('save-status', `Error: ${result.message || 'Server error'}`, 'error');
+            setStatus('ph-status', `Error: ${result.message}`, 'error');
         }
-    } catch (error) {
-         setStatus('save-status', 'Save failed. Network error or timeout.', 'error');
+        document.getElementById(`ph-cal-btn-${point}`).disabled = false;
     }
-}
 
-// --- Initial Load ---
-document.addEventListener('DOMContentLoaded', () => {
+    // --- NEW EC Calibration Function ---
+    async function performEcCalibrate(point) {
+        const ecValue = parseFloat(document.getElementById(`ec-val-${point}`).value);
+        if (isNaN(ecValue)) {
+            setStatus('ec-status', `Point ${point} EC value is invalid.`, 'error'); return;
+        }
+        setStatus('ec-status', `Reading voltage for Point ${point}...`, 'info');
+        document.getElementById(`ec-cal-btn-${point}`).disabled = true;
+        const result = await performApiAction('get_ec_voltage'); // New API action
+        if (result.status === 'success') {
+            calibrationState[`ec_point${point}_voltage`] = result.voltage;
+            calibrationState[`ec_point${point}_value`] = ecValue;
+            document.getElementById(`ec-volt-${point}`).textContent = result.voltage.toFixed(4);
+            setStatus('ec-status', `Voltage for Point ${point} recorded.`, 'success');
+        } else {
+            setStatus('ec-status', `Error: ${result.message}`, 'error');
+        }
+        document.getElementById(`ec-cal-btn-${point}`).disabled = false;
+    }
+
+    async function loadSettings() {
+        try {
+            const response = await fetchWithTimeout('/settings_api/');
+            if (!response.ok) throw new Error("Server error.");
+            const data = await response.json();
+            calibrationState = data;
+            // Weight
+            document.getElementById('current-offset').textContent = data.weight_offset.toFixed(2);
+            document.getElementById('current-scale').textContent = data.weight_scale.toFixed(4);
+            // pH
+            document.getElementById('ph-val-1').value = data.ph_point1_value.toFixed(1);
+            document.getElementById('ph-volt-1').textContent = data.ph_point1_voltage.toFixed(4);
+            document.getElementById('ph-val-2').value = data.ph_point2_value.toFixed(1);
+            document.getElementById('ph-volt-2').textContent = data.ph_point2_voltage.toFixed(4);
+            document.getElementById('current-ph-slope').textContent = data.ph_slope.toFixed(4);
+            document.getElementById('current-ph-intercept').textContent = data.ph_intercept.toFixed(4);
+            // EC - New
+            document.getElementById('ec-val-1').value = data.ec_point1_value.toFixed(0);
+            document.getElementById('ec-volt-1').textContent = data.ec_point1_voltage.toFixed(4);
+            document.getElementById('ec-val-2').value = data.ec_point2_value.toFixed(0);
+            document.getElementById('ec-volt-2').textContent = data.ec_point2_voltage.toFixed(4);
+            document.getElementById('current-ec-slope').textContent = data.ec_slope.toFixed(4);
+            document.getElementById('current-ec-intercept').textContent = data.ec_intercept.toFixed(4);
+
+        } catch(error) {
+            console.error("Could not load settings", error);
+            setStatus('save-status', 'Could not load settings from server.', 'error');
+        }
+    }
+
+    async function saveSettings() {
+        setStatus('save-status', 'Saving...', 'info');
+        try {
+            const response = await fetchWithTimeout('/settings_api/', { method: 'POST', body: JSON.stringify(calibrationState) });
+            const result = await response.json();
+            if (response.ok) {
+                setStatus('save-status', 'Settings saved successfully!', 'success');
+                loadSettings();
+            } else {
+                setStatus('save-status', `Error: ${result.message || 'Server error'}`, 'error');
+            }
+        } catch (error) {
+             setStatus('save-status', 'Save failed. Network error or timeout.', 'error');
+        }
+    }
+    
+    // --- Initial Load ---
     updateLatestData();
     setInterval(updateLatestData, 5000);
     const initialTab = document.querySelector('.tab-button.active');
-    showTab({ currentTarget: initialTab }, 'realtime');
+    showTab(initialTab, 'realtime');
 });
-
 </script>
 </body>
 </html>
+
