@@ -1,39 +1,36 @@
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.utils import timezone
-from datetime import timedelta
-from .models import SensorData, CalibrationSettings
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.templatetags.static import static
+from datetime import timedelta, datetime
+from .models import SensorData, CalibrationSettings, FarmJournal
 import json
 import serial
 import time
 import statistics
+import os
 
 # --- Configuration ---
-# Match these with your read_sensors.py script and hardware setup
 SERIAL_PORT = '/dev/ttyACM0'
 BAUD_RATE = 9600
 
 # --- Helper Function for Calibration ---
-def get_stable_reading_from_arduino(data_index):
+def _get_stable_reading_from_arduino(data_index):
     """
-    Connects to Arduino, reads several lines, and returns a stable average 
+    Connects to Arduino, reads several lines, and returns a stable median
     for a specific data point index in the CSV stream.
-    
-    CSV Format: "Temp,Hum,CO2,Lux,Weight_Raw,pH_Voltage,EC_Raw"
-    Indices:      0    1   2   3      4          5         6
     """
     values = []
+    # Using 'with' ensures the serial port is closed even if errors occur.
     try:
-        with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2) as ser:
-            time.sleep(2) # Wait for connection to establish
+        with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1) as ser:
+            time.sleep(2) # Wait for connection to establish and initial data to clear.
             ser.flushInput()
             
-            # Read a number of samples to get a stable value
-            sample_count = 0
-            max_samples = 25
             start_time = time.time()
-            
-            while sample_count < max_samples and (time.time() - start_time) < 5: # 5-second timeout
+            # Try to collect up to 15 samples within a 5-second window.
+            while len(values) < 15 and (time.time() - start_time) < 5:
                 if ser.in_waiting > 0:
                     try:
                         line = ser.readline().decode('utf-8').strip()
@@ -41,22 +38,26 @@ def get_stable_reading_from_arduino(data_index):
                         if len(parts) == 7:
                             raw_value = float(parts[data_index])
                             values.append(raw_value)
-                            sample_count += 1
                     except (UnicodeDecodeError, ValueError, IndexError):
-                        continue # Ignore malformed lines
-                time.sleep(0.05)
-
-        if len(values) < 5: # Need at least a few values to be confident
-            return None
-        # Return the average of the last 5 readings for stability
-        return statistics.mean(values[-5:])
+                        # Silently ignore malformed lines and try again.
+                        continue
+            
+            # We need at least 2 valid readings to be confident.
+            if len(values) >= 2:
+                # Median is more robust against outliers than mean.
+                return statistics.median(values)
+            else:
+                # Not enough data was received in time.
+                return f"Error: Not enough valid data received. Got {len(values)} samples."
 
     except serial.SerialException:
-        return None
+        return "Error: Could not open serial port. Check connection and permissions."
+    except Exception as e:
+        return f"Error: An unexpected error occurred: {e}"
+    
+    # --- API Views ---
 
-
-# --- API Views ---
-
+@ensure_csrf_cookie
 def settings_api(request):
     """API to get or save calibration settings."""
     settings = CalibrationSettings.load()
@@ -79,13 +80,14 @@ def settings_api(request):
             data = json.loads(request.body)
             # Update only the fields that are present in the request
             for key, value in data.items():
-                if hasattr(settings, key):
+                if hasattr(settings, key) and value is not None:
                     setattr(settings, key, float(value))
             settings.save()
             return JsonResponse({'status': 'success', 'message': 'Settings saved!'})
         except (json.JSONDecodeError, ValueError, TypeError) as e:
             return HttpResponseBadRequest(f"Invalid data format: {e}")
 
+@ensure_csrf_cookie
 def calibration_api(request):
     """Handles live requests for calibration actions."""
     if request.method != 'POST':
@@ -99,25 +101,24 @@ def calibration_api(request):
 
     if action == 'tare':
         # Weight raw data is at index 4
-        reading = get_stable_reading_from_arduino(4)
-        if reading is not None:
+        reading = _get_stable_reading_from_arduino(4)
+        if isinstance(reading, float):
             return JsonResponse({'status': 'success', 'offset': reading})
         else:
-            return JsonResponse({'status': 'error', 'message': 'Could not read from Arduino. Check connection.'}, status=500)
+            return JsonResponse({'status': 'error', 'message': reading}, status=500)
 
     elif action == 'get_ph_voltage':
         # pH voltage is at index 5
-        reading = get_stable_reading_from_arduino(5)
-        if reading is not None:
+        reading = _get_stable_reading_from_arduino(5)
+        if isinstance(reading, float):
             return JsonResponse({'status': 'success', 'voltage': reading})
         else:
-            return JsonResponse({'status': 'error', 'message': 'Could not read from Arduino. Check connection.'}, status=500)
+            return JsonResponse({'status': 'error', 'message': reading}, status=500)
 
     return HttpResponseBadRequest("Invalid action specified.")
-
-
 # --- Main Application Views ---
 
+@ensure_csrf_cookie
 def sensor_dashboard_view(request):
     """Renders the main single-page application dashboard."""
     return render(request, 'imojang/serial_display.html')
@@ -162,7 +163,6 @@ def historical_data_api(request):
         
     data_points = SensorData.objects.filter(timestamp__range=(start_time, end_time)).order_by('timestamp')
 
-    # To avoid sending too much data to the browser, we can thin it out if the dataset is large
     count = data_points.count()
     if count > 500:
         data_points = data_points[::count//500]
@@ -174,9 +174,9 @@ def historical_data_api(request):
             'air_temperature': [d.air_temperature for d in data_points],
             'air_humidity': [d.air_humidity for d in data_points],
             'co2': [d.co2 for d in data_points],
+            'lux': [d.lux for d in data_points],
             'ec': [d.ec_calibrated for d in data_points],
             'ph': [d.ph_calibrated for d in data_points],
-            # --- ADDED SOIL DATA FOR GRAPHS ---
             'soil_temperature': [d.soil_temperature for d in data_points],
             'soil_humidity': [d.soil_humidity for d in data_points],
             'soil_conductivity': [d.soil_conductivity for d in data_points],
@@ -184,4 +184,56 @@ def historical_data_api(request):
         }
     }
     return JsonResponse(data)
+@ensure_csrf_cookie
+def journal_api(request):
+    if request.method == 'GET':
+        date_str = request.GET.get('date')
+        if not date_str:
+            return HttpResponseBadRequest("Date parameter is required.")
+        
+        try:
+            selected_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            journal_entry = FarmJournal.objects.get(date=selected_date)
+            
+            image_url = static(f'imojang/journal_images/{date_str}.jpg')
 
+            data = {
+                'status': 'found',
+                'date': journal_entry.date.strftime('%Y-%m-%d'),
+                'farm_work': journal_entry.farm_work,
+                'pesticide': journal_entry.pesticide,
+                'fertilizer': journal_entry.fertilizer,
+                'harvest': journal_entry.harvest,
+                'notes': journal_entry.notes,
+                'image_url': image_url
+            }
+        except FarmJournal.DoesNotExist:
+            image_url = static(f'imojang/journal_images/{date_str}.jpg')
+            data = {'status': 'not_found', 'image_url': image_url}
+        
+        return JsonResponse(data)
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            date_str = data.get('date')
+            if not date_str:
+                return HttpResponseBadRequest("Date is required.")
+            
+            selected_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            
+            journal_entry, created = FarmJournal.objects.update_or_create(
+                date=selected_date,
+                defaults={
+                    'farm_work': data.get('farm_work', ''),
+                    'pesticide': data.get('pesticide', ''),
+                    'fertilizer': data.get('fertilizer', ''),
+                    'harvest': data.get('harvest', ''),
+                    'notes': data.get('notes', ''),
+                }
+            )
+            return JsonResponse({'status': 'success', 'message': '?쇱?媛 ??λ릺?덉뒿?덈떎.'})
+        except (json.JSONDecodeError, ValueError) as e:
+            return HttpResponseBadRequest(f"Invalid data: {e}")
+        
+    return HttpResponseBadRequest("Unsupported request method.")
