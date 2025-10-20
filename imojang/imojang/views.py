@@ -15,7 +15,7 @@ BAUD_RATE = 9600
 def get_stable_reading_from_arduino(data_index):
     """
     Connects to Arduino and gets a stable reading for a specific data index.
-    NEW Format: "AirT,AirH,CO2,Lux,Weight,pH_V,EC_V,WaterT"
+    NEW Format: "AirT,AirH,CO2,insolation,Weight,pH_V,EC_V,WaterT"
     Indices:       0    1    2   3    4      5    6     7
     """
     values = []
@@ -128,7 +128,7 @@ def latest_data_api(request):
             'air_temperature': latest.air_temperature,
             'air_humidity': latest.air_humidity,
             'co2': latest.co2,
-            'lux': latest.lux,
+            'insolation': latest.insolation,
             'water_temperature': latest.water_temperature, # Add water temp
             'weight_calibrated': latest.weight_calibrated,
             'ph_calibrated': latest.ph_calibrated,
@@ -161,7 +161,7 @@ def historical_data_api(request):
             'air_temperature': [d.air_temperature for d in qs],
             'air_humidity': [d.air_humidity for d in qs],
             'co2': [d.co2 for d in qs],
-            'lux': [d.lux for d in qs],
+            'insolation': [d.insolation for d in qs],
             'ec': [d.ec_calibrated for d in qs],
             'ph': [d.ph_calibrated for d in qs],
             'water_temperature': [d.water_temperature for d in qs], # Add water temp
