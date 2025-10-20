@@ -19,7 +19,7 @@ class SensorData(models.Model):
     air_temperature = models.FloatField(null=True, blank=True)
     air_humidity = models.FloatField(null=True, blank=True)
     co2 = models.FloatField(null=True, blank=True)
-    lux = models.FloatField(null=True, blank=True)
+    insolation = models.FloatField(null=True, blank=True)
     
     # Water sensors
     water_temperature = models.FloatField(null=True, blank=True)
