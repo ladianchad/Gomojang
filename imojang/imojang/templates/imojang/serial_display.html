@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>怨좎젙 紐⑤땲?곕쭅 ?μ튂</title>
+    <title>고정 모니터링 장치</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -54,18 +54,18 @@
 <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
 
 <div class="container">
-    <h1>怨좎젙 紐⑤땲?곕쭅 ?μ튂</h1>
+    <h1>고정 모니터링 장치</h1>
 
     <div class="tab-nav">
-        <button class="tab-button active" data-tab="realtime">?ㅼ떆媛?/button>
-        <button class="tab-button" data-tab="graphs">洹몃옒??/button>
-        <button class="tab-button" data-tab="journal">?띿옣 ?쇨린</button>
-        <button class="tab-button" data-tab="calibration">蹂댁젙</button>
+        <button class="tab-button active" data-tab="realtime">실시간</button>
+        <button class="tab-button" data-tab="graphs">그래프</button>
+        <button class="tab-button" data-tab="journal">농장 일기</button>
+        <button class="tab-button" data-tab="calibration">보정</button>
     </div>
 
     <!-- Tab 1: Real-time Data -->
     <div id="realtime" class="tab-content active">
-        <h2>?ㅼ떆媛??쇱꽌 ?곗씠??/h2>
+        <h2>실시간</h2>
         <h3>?섍꼍</h3>
         <div class="data-grid">
             <div class="data-card"><div class="label">?⑤룄</div><div class="value" id="latest-air_temperature">-</div><span class="unit">*C</span></div>
