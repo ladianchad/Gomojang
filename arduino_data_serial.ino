@@ -70,6 +70,7 @@ void loop() {
         int raw_PH = analogRead(PHpin);
         float PH_voltage = raw_PH * (5.0 / 1023.0);
         float water_temp = DS18B20_Sensor.getTempC();
+        float insolation = ((lux/54)*(1/4.57));
 
         Serial.print(temperature);
         Serial.print(",");
@@ -77,7 +78,7 @@ void loop() {
         Serial.print(",");
         Serial.print(co2_ppm);
         Serial.print(","); 
-        Serial.print(lux);
+        Serial.print(insolation);
         Serial.print(",");
         Serial.print(raw_weight);
         Serial.print(",");
