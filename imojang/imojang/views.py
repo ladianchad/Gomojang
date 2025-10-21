@@ -2,7 +2,6 @@ from django.shortcuts import render
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.utils import timezone
 from datetime import timedelta
-# --- MODIFIED: Add FarmJournal to the import list ---
 from .models import SensorData, CalibrationSettings, FarmJournal
 import json
 import serial
