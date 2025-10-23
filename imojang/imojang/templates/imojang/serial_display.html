@@ -322,7 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         } catch (error) {
-            if (error.name !== 'AbortError') console.error("Error updating charts:", error);
+            if (error.name !== 'AbortError') console.error("李⑦듃 ?낅줈???먮윭:", error);
         }
     }
 
@@ -377,10 +377,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 setStatus('journal-status', result.message, 'success');
                 loadJournalEntry(date);
             } else {
-                setStatus('journal-status', `Save failed: ${result.message || 'Server error'}`, 'error');
+                setStatus('journal-status', `????ㅽ뙣: ${result.message || '?쒕쾭 ?먮윭'}`, 'error');
             }
         } catch (error) {
-            setStatus('journal-status', 'A network error occurred while saving.', 'error');
+            setStatus('journal-status', '???以??ㅽ듃?뚰겕 ?먮윭媛 ?댁뒿?덈떎.', 'error');
         }
     }
 
@@ -456,16 +456,16 @@ document.addEventListener('DOMContentLoaded', () => {
     async function performEcCalibrate(point) {
         const ecValue = parseFloat(document.getElementById(`ec-val-${point}`).value);
         if (isNaN(ecValue)) { setStatus('ec-status', `Point ${point} EC value is invalid.`, 'error'); return; }
-        setStatus('ec-status', `Reading voltage for Point ${point}...`, 'info');
+        setStatus('ec-status', `??${point} ???곗씠??媛믪쓣 ?쎈뒗 以?..`, 'info');
         document.getElementById(`ec-cal-btn-${point}`).disabled = true;
         const result = await performApiAction('get_ec_voltage');
         if (result.status === 'success') {
             calibrationState[`ec_point${point}_voltage`] = result.voltage;
             calibrationState[`ec_point${point}_value`] = ecValue;
             document.getElementById(`ec-volt-${point}`).textContent = result.voltage.toFixed(4);
-            setStatus('ec-status', `Voltage for Point ${point} recorded.`, 'success');
+            setStatus('ec-status', `??${point}???곗씠??媛?????깃났.`, 'success');
         } else {
-            setStatus('ec-status', `Error: ${result.message}`, 'error');
+            setStatus('ec-status', `?먮윭: ${result.message}`, 'error');
         }
         document.getElementById(`ec-cal-btn-${point}`).disabled = false;
     }
@@ -473,7 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadSettings() {
         try {
             const response = await fetchWithTimeout('/settings_api/');
-            if (!response.ok) throw new Error("Server error.");
+            if (!response.ok) throw new Error("?쒕쾭 ?먮윭.");
             const data = await response.json();
             calibrationState = data;
             document.getElementById('current-offset').textContent = data.weight_offset.toFixed(2);
