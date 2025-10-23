@@ -21,6 +21,12 @@
         .tab-nav button.active { background-color: #007bff; color: black; }
         .tab-content { display: none; padding: 20px 12px; border-top: none; background-color: #fff; border-radius: 0 0 8px 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
         .tab-content.active { display: block; }
+        /* --- Style for Graph Controls --- */
+        .graph-controls { margin-bottom: 20px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .graph-controls label { font-weight: bold; }
+        .date-range-picker { padding: 10px 15px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; cursor: pointer; background-color: white; }
+        /* --- Style to hide/show date picker --- */
+        #date-range-picker-container { display: none; /* Initially hidden */ margin-left: 10px; } 
         .data-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
         .data-card { background-color: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.2s; }
         .data-card:hover { transform: translateY(-5px); }
@@ -93,17 +99,27 @@
         <p style="text-align: center; margin-top: 20px; color: #888;">留덉?留??낅뜲?댄듃 ?쒓컙: <span id="latest-timestamp">-</span></p>
     </div>
 
-    <!-- Tab 2: Graphs -->
+    <!-- Tab 2: Graphs (Modified Controls) -->
     <div id="graphs" class="tab-content">
         <h2>洹몃옒??/h2>
         <div class="graph-controls">
-            <label for="timespan-select">?쒓컙 ?⑥쐞 ?ㅼ젙:</label>
+            <label for="timespan-select">?쒓컙 踰붿쐞 ?좏깮:</label>
             <select id="timespan-select">
-                <option value="10m">理쒓렐 10遺?/option>
-                <option value="1h" selected>理쒓렐 1?쒓컙</option>
-                <option value="24h">理쒓렐 1??/option>
-                <option value="7d">理쒓렐 1二쇱씪</option>
+                <option value="10m">吏??10遺?/option>
+                <option value="1h" selected>吏??1?쒓컙</option>
+                <option value="24h">吏??1??/option>
+                <option value="7d">吏??1二?/option>
+                <!-- --- NEW: Custom Range Option --- -->
+                <option value="custom">吏곸젒 ?좎쭨 ?좏깮?섍린...</option> 
             </select>
+            <!-- --- NEW: Container for Date Picker --- -->
+            <div id="date-range-picker-container"> 
+                <label for="date-range-picker">?좎쭨 ?좏깮:</label>
+                <input type="text" id="date-range-picker" class="date-range-picker" placeholder="Select date range...">
+            </div>
+            <button id="refresh-graphs-btn" style="margin-left: 10px;">?곗씠??遺덈윭?ㅺ린</button>
+             <!-- Optional status message area -->
+            <span id="graph-status" class="status-message" style="margin-left: 15px;"></span> 
         </div>
         <div class="chart-container"><canvas id="weightChart"></canvas></div>
         <div class="chart-container"><canvas id="envChart"></canvas></div>
@@ -218,6 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let charts = {};
     let calibrationState = {};
     let calendar;
+    let dateRangePicker;
 
     // --- Assign Event Listeners Correctly ---
     document.querySelectorAll('.tab-button').forEach(button => {
@@ -227,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    document.getElementById('timespan-select').addEventListener('change', () => updateAllCharts());
+    //document.getElementById('timespan-select').addEventListener('change', () => updateAllCharts());
     document.getElementById('save-journal-btn').addEventListener('click', () => saveJournalEntry());
     document.getElementById('tare-btn').addEventListener('click', () => performTare());
     document.getElementById('calibrate-btn').addEventListener('click', () => performWeightCalibrate());
@@ -236,6 +253,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('ec-cal-btn-1').addEventListener('click', () => performEcCalibrate(1));
     document.getElementById('ec-cal-btn-2').addEventListener('click', () => performEcCalibrate(2));
     document.getElementById('save-settings-btn').addEventListener('click', () => saveSettings());
+    document.getElementById('timespan-select').addEventListener('change', handleGraphControlsChange);
+    document.getElementById('refresh-graphs-btn').addEventListener('click', () => updateAllCharts()); 
+    
 
     // --- Tab Navigation ---
     function showTab(buttonElement, tabName) {
@@ -244,7 +264,13 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById(tabName).style.display = "block";
         buttonElement.classList.add("active");
 
-        if (tabName === 'graphs' && Object.keys(charts).length === 0) initializeCharts();
+        if (tabName === 'graphs') {
+            initializeDateRangePicker(); // Initialize date picker when graph tab is shown
+            if (Object.keys(charts).length === 0) {
+                 initializeCharts(); // Initialize charts only once
+            }
+             handleGraphControlsChange(); // Update charts based on initial dropdown/picker state
+        }
         if (tabName === 'calibration') loadSettings();
         if (tabName === 'journal') initializeCalendar();
     }
@@ -293,6 +319,45 @@ document.addEventListener('DOMContentLoaded', () => {
         return new Chart(ctx, config);
     }
 
+    function initializeDateRangePicker() {
+        if (dateRangePicker) return; // Already initialized
+
+        // Set default dates: yesterday to today
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const today = new Date();
+
+        dateRangePicker = flatpickr("#date-range-picker", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            defaultDate: [yesterday, today], // Set default range
+            locale: "ko", // Use Korean locale
+            // onClose is better than onChange for range mode
+            onClose: function(selectedDates, dateStr, instance) {
+                // Only trigger update if custom range is selected in the dropdown
+                if (document.getElementById('timespan-select').value === 'custom' && selectedDates.length === 2) {
+                     updateAllCharts(); // Update when a valid range is selected using the picker
+                }
+            }
+        });
+    }
+
+    // --- NEW: Handle changes in graph controls ---
+    function handleGraphControlsChange() {
+        const selectedTimespan = document.getElementById('timespan-select').value;
+        const datePickerContainer = document.getElementById('date-range-picker-container');
+
+        if (selectedTimespan === 'custom') {
+            datePickerContainer.style.display = 'inline-block'; // Show date picker
+            // Do not trigger updateAllCharts here automatically
+            // Let the date picker's onClose or the refresh button handle it
+        } else {
+            datePickerContainer.style.display = 'none'; // Hide date picker
+            updateAllCharts(); // Update immediately for relative timespans like "Last Hour"
+        }
+    }
+
+
     function initializeCharts() {
         const commonOptions = { responsive: true, maintainAspectRatio: false };
         charts.weight = createChart('weightChart', { type: 'line', data: { labels: [], datasets: [{ label: '臾닿쾶 (g)', data: [], borderColor: '#8e5ea2', fill: false }] }, options: { ...commonOptions, title: { display: true, text: '臾닿쾶' }, scales: { yAxes: [{ ticks: { suggestedMin: 0 } }] } } });
@@ -303,11 +368,51 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function updateAllCharts() {
-        const timespan = document.getElementById('timespan-select').value;
+        const selectedOption = document.getElementById('timespan-select').value;
+        let apiUrl = '/historical_data_api/';
+        let queryParams = '';
+
+        if (selectedOption === 'custom') {
+            // Ensure date picker is initialized and has a valid range selected
+            if (!dateRangePicker || dateRangePicker.selectedDates.length !== 2) {
+                 setStatus('graph-status', 'Please select a valid start and end date using the date picker.', 'info'); 
+                 // Clear charts or leave them as they are? Clear is safer.
+                 Object.values(charts).forEach(chart => {
+                     chart.data.labels = [];
+                     chart.data.datasets.forEach(dataset => dataset.data = []);
+                     chart.update();
+                 });
+                 return; 
+            }
+            const startDate = dateRangePicker.selectedDates[0].toISOString().split('T')[0];
+            const endDate = dateRangePicker.selectedDates[1].toISOString().split('T')[0];
+            queryParams = `?start_date=${startDate}&end_date=${endDate}`;
+            console.log(`Fetching data from ${startDate} to ${endDate}`);
+        } else {
+            queryParams = `?timespan=${selectedOption}`;
+            console.log(`Fetching data for timespan: ${selectedOption}`);
+        }
+        
+        setStatus('graph-status', 'Loading graph data...', 'info'); 
+
         try {
-            const response = await fetchWithTimeout(`/historical_data_api/?timespan=${timespan}`);
-            if (!response.ok) return;
+            const response = await fetchWithTimeout(apiUrl + queryParams);
+            if (!response.ok) {
+                 setStatus('graph-status', `Failed to load data: ${response.status}`, 'error');
+                 return;
+            }
             const data = await response.json();
+
+            if (!data || !data.labels || data.labels.length === 0) {
+                setStatus('graph-status', 'No data found for the selected range.', 'info');
+                 Object.values(charts).forEach(chart => {
+                     chart.data.labels = [];
+                     chart.data.datasets.forEach(dataset => dataset.data = []);
+                     chart.update();
+                 });
+                return;
+            }
+
             const map = {
                 weight: { chart: charts.weight, datasets: [data.datasets.weight] },
                 env: { chart: charts.env, datasets: [data.datasets.air_temperature, data.datasets.air_humidity, data.datasets.co2, data.datasets.insolation] },
@@ -317,13 +422,22 @@ document.addEventListener('DOMContentLoaded', () => {
             for (const key in map) {
                 if(map[key].chart) {
                     map[key].chart.data.labels = data.labels;
-                    map[key].datasets.forEach((ds, i) => map[key].chart.data.datasets[i].data = ds);
+                    map[key].datasets.forEach((ds, i) => {
+                         if (map[key].chart.data.datasets[i]) {
+                             map[key].chart.data.datasets[i].data = ds || []; 
+                         }
+                    });
                     map[key].chart.update();
                 }
             }
+             setStatus('graph-status', '', 'info'); // Clear status
+
         } catch (error) {
-            if (error.name !== 'AbortError') console.error("李⑦듃 ?낅줈???먮윭:", error);
-        }
+            if (error.name !== 'AbortError') {
+                console.error("Error updating charts:", error);
+                 setStatus('graph-status', 'Error loading graph data.', 'error');
+            }
+        } 
     }
 
     // --- Tab 3: Farm Journal ---
