@@ -171,7 +171,7 @@ def calibration_api(request):
 
 def sensor_dashboard_view(request):
     """Renders the main single-page application dashboard."""
-    return render(request, 'imojang/serial_display.html')
+    return render(request, 'omnitor/index.html')
 
 def latest_data_api(request):
     """API endpoint to return the latest sensor data as JSON."""
@@ -293,7 +293,7 @@ def journal_api(request):
         
         # Construct the expected image path relative to the static root
         image_name = f"{date_str}.jpg"
-        image_relative_path = os.path.join('imojang', 'journal_images', image_name)
+        image_relative_path = os.path.join('omnitor', 'journal_images', image_name)
         image_url = staticfiles_storage.url(image_relative_path)
 
         # Check if the actual image file exists
