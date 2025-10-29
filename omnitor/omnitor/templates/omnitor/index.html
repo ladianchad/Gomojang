@@ -1,19 +1,21 @@
 <!DOCTYPE html>
 {% load static %}
-<html lang="en">
+<html lang="kor">
 <head>
     <meta charset="UTF-8">
     <title>omnitor</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght@0,300..800;1,300..800&family=Hahmlet:wght@100..900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
+    
     <style>
         body { 
-            font-family: "Google Sans Code", sans-serif;
+            font-family: "Hahmlet", "Google Sans Code", sans-serif;
             background-color: #f0f2f5;
             color: #333;
             margin: 0;
@@ -47,7 +49,7 @@
         .chart-container { position: relative; height: 40vh; width: 100%; margin-top: 20px; }
         .calibration-section { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
         .calibration-box { padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #fdfdfd;}
-        button, input, select, textarea { padding: 10px 15px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; font-family: "Google Sans Code", sans-serif;}
+        button, input, select, textarea { padding: 10px 15px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; font-family: "Hahmlet", "Google Sans Code", sans-serif;}
         button { background-color: #007bff; color: white; cursor: pointer; border-color: #007bff; transition: background-color 0.2s; }
         button:hover { background-color: #0056b3; }
         button:disabled { background-color: #aaa; cursor: not-allowed; border-color: #aaa; }
@@ -81,8 +83,8 @@
 
     <div class="tab-nav">
         <button class="tab-button active" data-tab="realtime">
-            <img src="{% static 'omnitor/images/dashboard.png' %}" alt="Real-time">
-            Real-time
+            <img src="{% static 'omnitor/images/dashboard.png' %}" alt="대시보드">
+            대시보드
         </button>
         <button class="tab-button" data-tab="graphs">
             <img src="{% static 'omnitor/images/graph.png' %}" alt="Graphs">
@@ -99,15 +101,66 @@
     </div>
 
     <div id="realtime" class="tab-content active">
-        <h2>Real-time Data</h2>
-        <h3>Environment</h3>
+        <h2>대시보드</h2>
+        <h3>환경</h3>
         <div class="data-grid">
             <div class="data-card"><div class="label">Temperature</div><div class="value" id="latest-air_temperature">-</div><span class="unit">*C</span></div>
             <div class="data-card"><div class="label">Humidity</div><div class="value" id="latest-air_humidity">-</div><span class="unit">%</span></div>
             <div class="data-card"><div class="label">CO2</div><div class="value" id="latest-co2">-</div><span class="unit">ppm</span></div>
             <div class="data-card"><div class="label">Insolation</div><div class="value" id="latest-insolation">-</div><span class="unit">W/m^2</span></div>
         </div>
-        <h3>Weight & Solution</h3>
+        <h3>무게 & 배액     .journal-display h4 { margin: 15px 0 5px 0; }
+        .journal-display p { background-color: #f8f9fa; padding: 10px; border-radius: 5px; white-space: pre-wrap; min-height: 20px; color: #333; }
+        .journal-form textarea { width: 100%; min-height: 80px; padding: 10px; box-sizing: border-box; font-size: 16px; margin-top: 5px; resize: vertical; }
+        .status-message { margin-top: 15px; font-weight: bold; padding: 10px; border-radius: 5px; display: none; text-align: center; }
+        .status-success { background-color: #d4edda; color: #155724; }
+        .status-error { background-color: #f8d7da; color: #721c24; }
+        .status-info { background-color: #cce5ff; color: #004085; }
+        .download-btn { display: inline-block; margin-top: 15px; padding: 8px 16px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; font-size: 14px; text-align: center; }
+        .download-btn:hover { background-color: #218838; }
+        .page-footer { margin-top: 40px; padding: 20px; background-color: #fff; border-radius: 8px; display: flex; align-items: center; gap: 20px; justify-content: space-between;}
+        .page-footer img { height: 50px; width: auto; border-radius: 8px; background-color: white; padding: 5px; border: 1px solid #ddd; object-fit: contain;}
+        .footer-text p { margin: 0; color: #555; }
+        .footer-left { display: flex; align-items: center; gap: 15px; }
+        .footer-right { text-align: right; font-size: 0.9em; color: #555; }
+    </style>
+</head>
+<body>
+
+<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+<div class="container">
+    <h1>omnitor</h1>
+
+    <div class="tab-nav">
+        <button class="tab-button active" data-tab="realtime">
+            <img src="{% static 'omnitor/images/dashboard.png' %}" alt="대시보드">
+            대시보드
+        </button>
+        <button class="tab-button" data-tab="graphs">
+            <img src="{% static 'omnitor/images/graph.png' %}" alt="Graphs">
+            Graphs
+        </button>
+        <button class="tab-button" data-tab="journal">
+            <img src="{% static 'omnitor/images/journal.png' %}" alt="Journal">
+            Farm Journal
+        </button>
+        <button class="tab-button" data-tab="calibration">
+            <img src="{% static 'omnitor/images/calibrate.png' %}" alt="Calibration">
+            Calibration Settings
+        </button>
+    </div>
+
+    <div id="realtime" class="tab-content active">
+        <h2>대시보드</h2>
+        <h3>환경</h3>
+        <div class="data-grid">
+            <div class="data-card"><div class="label">Temperature</div><div class="value" id="latest-air_temperature">-</div><span class="unit">*C</span></div>
+            <div class="data-card"><div class="label">Humidity</div><div class="value" id="latest-air_humidity">-</div><span class="unit">%</span></div>
+            <div class="data-card"><div class="label">CO2</div><div class="value" id="latest-co2">-</div><span class="unit">ppm</span></div>
+            <div class="data-card"><div class="label">Insolation</div><div class="value" id="latest-insolation">-</div><span class="unit">W/m^2</span></div>
+        </div>
+        <h3>무게 & 배액</h3>
         <div class="data-grid">
             <div class="data-card"><div class="label">Weight</div><div class="value" id="latest-weight_calibrated">-</div><span class="unit">g</span></div>
             <div class="data-card"><div class="label">Water Temp</div><div class="value" id="latest-water_temperature">-</div><span class="unit">*C</span></div>
@@ -317,7 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Tab 1: Real-time Data ---
+    // --- Tab 1: 실시간 Data ---
     async function updateLatestData() {
         try {
             const response = await fetchWithTimeout('/latest_data_api/');
