@@ -83,19 +83,19 @@
 
     <div class="tab-nav">
         <button class="tab-button active" data-tab="realtime">
-            <img src="{% static 'gomojang/images/dashboard.jpg' %}" alt="Real-time">
+            <img src="{% static 'omnitor/images/dashboard.jpg' %}" alt="Real-time">
             Real-time
         </button>
         <button class="tab-button" data-tab="graphs">
-            <img src="{% static 'gomojang/images/graph.jpg' %}" alt="Graphs">
+            <img src="{% static 'omnitor/images/graph.jpg' %}" alt="Graphs">
             Graphs
         </button>
         <button class="tab-button" data-tab="journal">
-            <img src="{% static 'gomojang/images/journal.jpg' %}" alt="Journal">
+            <img src="{% static 'omnitor/images/journal.jpg' %}" alt="Journal">
             Farm Journal
         </button>
         <button class="tab-button" data-tab="calibration">
-            <img src="{% static 'gomojang/images/calibrate.jpg' %}" alt="Calibration">
+            <img src="{% static 'omnitor/images/calibrate.jpg' %}" alt="Calibration">
             Calibration Settings
         </button>
     </div>
@@ -241,7 +241,7 @@
 
 <footer class="page-footer">
     <div class="footer-left">
-        <img src="{% static 'gomojang/images/logo.png' %}" alt="Gomojang Logo">
+        <img src="{% static 'omnitor/images/logo.png' %}" alt="omnitor Logo">
         <div class="footer-text">
             <p><strong>Metafarmers</strong></p>
             <p>what began with farmers; robots carry forward</p>
@@ -487,7 +487,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             imageEl.src = data.image_url + '?' + new Date().getTime();
             downloadLink.href = data.image_url;
-            downloadLink.download = `gomojang-journal-${date}.jpg`;
+            downloadLink.download = `omnitor-journal-${date}.jpg`;
             imageEl.onerror = () => { imageEl.src = 'https://placehold.co/600x400/eee/ccc?text=No+Image'; downloadLink.style.display = 'none'; };
             imageEl.onload = () => { downloadLink.style.display = imageEl.src.includes('placehold.co') ? 'none' : 'inline-block'; };
             if (data.status === 'found') {
