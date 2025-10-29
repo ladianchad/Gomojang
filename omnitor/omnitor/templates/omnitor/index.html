@@ -23,7 +23,7 @@
         h2 { color: #33475b; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 40px; }
         h3 { margin-top: 30px; color: #555; font-weight: 500; padding-bottom: 5px; border-bottom: 1px solid #eee; }
         .tab-nav { overflow: hidden; border-bottom: 1px solid #ccc; background-color: #fff; border-radius: 8px 8px 0 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .tab-nav button { background-color: inherit; float: center; border: none; outline: none; cursor: pointer; padding: 14px 16px; transition: 0.3s; font-size: 17px; color: black; display: flex; align-items: center;}
+        .tab-nav button { background-color: inherit; float: left; border: none; outline: none; cursor: pointer; padding: 14px 16px; transition: 0.3s; font-size: 17px; color: black; display: flex; align-items: center;}
         .tab-nav button:hover { background-color: #f1f1f1; }
         .tab-nav button.active { background-color: #007bff; color: black; }
         .tab-nav button img {
@@ -34,12 +34,10 @@
         }
         .tab-content { display: none; padding: 20px 12px; border-top: none; background-color: #fff; border-radius: 0 0 8px 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
         .tab-content.active { display: block; }
-        /* --- Style for Graph Controls --- */
         .graph-controls { margin-bottom: 20px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .graph-controls label { font-weight: bold; }
         .date-range-picker { padding: 10px 15px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; cursor: pointer; background-color: white; }
-        /* --- Style to hide/show date picker --- */
-        #date-range-picker-container { display: none; /* Initially hidden */ margin-left: 10px; } 
+        #date-range-picker-container { display: none; margin-left: 10px; } 
         .data-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
         .data-card { background-color: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.2s; }
         .data-card:hover { transform: translateY(-5px); }
@@ -67,7 +65,7 @@
         .status-info { background-color: #cce5ff; color: #004085; }
         .download-btn { display: inline-block; margin-top: 15px; padding: 8px 16px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; font-size: 14px; text-align: center; }
         .download-btn:hover { background-color: #218838; }
-        .page-footer { margin-top: 40px; padding: 20px; background-color: #fff; border-radius: 8px; display: flex; align-items: center; gap: 20px; }
+        .page-footer { margin-top: 40px; padding: 20px; background-color: #fff; border-radius: 8px; display: flex; align-items: center; gap: 20px; justify-content: space-between;}
         .page-footer img { height: 50px; width: auto; border-radius: 8px; background-color: white; padding: 5px; border: 1px solid #ddd; object-fit: contain;}
         .footer-text p { margin: 0; color: #555; }
         .footer-left { display: flex; align-items: center; gap: 15px; }
@@ -249,10 +247,10 @@
     </div>
 
     <div class="footer-right">
-        <p> (주)메타파머스 | 대표: 이규화 </p>
-        <p> 사업자등록번호: 264-87-02694 </p>
-        <p> 주소: 서울특별시 관악구 남부순환로 1922 302호 </p>
-        <p> 이메일: contact@metafarmers.ai</p>
+        <p> Metafarmers | Lee KyuWha </p>
+        <p> Business Registration No.: 264-87-02694 </p>
+        <p> Address: 302, 1922, Nambusunhwan-ro, Gwanak-gu, Seoul, Republic of Korea </p>
+        <p> Contacts: contact@metafarmers.ai</p>
     </div>
 </footer>
 
