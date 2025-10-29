@@ -19,7 +19,7 @@
             margin: 0;
         }
         .container { max-width: 1600px; margin: auto; padding: 20px; }
-        h1 { color: #1a2b4d; }
+        h1 { color: #1a2b4d; font-size: 80px; }
         h2 { color: #33475b; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 40px; }
         h3 { margin-top: 30px; color: #555; font-weight: 500; padding-bottom: 5px; border-bottom: 1px solid #eee; }
         .tab-nav { overflow: hidden; border-bottom: 1px solid #ccc; background-color: #fff; border-radius: 8px 8px 0 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
@@ -81,19 +81,19 @@
 
     <div class="tab-nav">
         <button class="tab-button active" data-tab="realtime">
-            <img src="{% static 'omnitor/images/dashboard.jpg' %}" alt="Real-time">
+            <img src="{% static 'omnitor/images/dashboard.png' %}" alt="Real-time">
             Real-time
         </button>
         <button class="tab-button" data-tab="graphs">
-            <img src="{% static 'omnitor/images/graph.jpg' %}" alt="Graphs">
+            <img src="{% static 'omnitor/images/graph.png' %}" alt="Graphs">
             Graphs
         </button>
         <button class="tab-button" data-tab="journal">
-            <img src="{% static 'omnitor/images/journal.jpg' %}" alt="Journal">
+            <img src="{% static 'omnitor/images/journal.png' %}" alt="Journal">
             Farm Journal
         </button>
         <button class="tab-button" data-tab="calibration">
-            <img src="{% static 'omnitor/images/calibrate.jpg' %}" alt="Calibration">
+            <img src="{% static 'omnitor/images/calibrate.png' %}" alt="Calibration">
             Calibration Settings
         </button>
     </div>
@@ -242,14 +242,15 @@
         <img src="{% static 'omnitor/images/logo.png' %}" alt="omnitor Logo">
         <div class="footer-text">
             <p><strong>Metafarmers</strong></p>
-            <p>what began with farmers; robots carry forward</p>
+            <p>what began with farmers;</p>
+            <p>robots carry forward</p>
         </div>
     </div>
 
     <div class="footer-right">
         <p> Metafarmers | Lee KyuWha </p>
         <p> Business Registration No.: 264-87-02694 </p>
-        <p> Address: 302, 1922, Nambusunhwan-ro, Gwanak-gu, Seoul, Republic of Korea </p>
+        <p> Address: 1922, Nambusunhwan-ro, Gwanak-gu, Seoul, Republic of Korea </p>
         <p> Contacts: contact@metafarmers.ai</p>
     </div>
 </footer>
