@@ -6,7 +6,7 @@ import math
 import minimalmodbus
 from collections import deque
 from django.core.management.base import BaseCommand
-from imojang.models import SensorData, CalibrationSettings
+from omnitor.models import SensorData, CalibrationSettings
 
 # --- Settings ---
 ARDUINO_PORT = '/dev/ttyACM0'
