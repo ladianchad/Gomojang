@@ -139,15 +139,15 @@
         </button>
         <button class="tab-button" data-tab="graphs">
             <img src="{% static 'omnitor/images/graph.png' %}" alt="Graphs">
-            Graphs
+            그래프
         </button>
         <button class="tab-button" data-tab="journal">
             <img src="{% static 'omnitor/images/journal.png' %}" alt="Journal">
-            Farm Journal
+            농장 일지
         </button>
         <button class="tab-button" data-tab="calibration">
             <img src="{% static 'omnitor/images/calibrate.png' %}" alt="Calibration">
-            Calibration Settings
+            보정 설정
         </button>
     </div>
 
@@ -167,7 +167,7 @@
             <div class="data-card"><div class="label">pH</div><div class="value" id="latest-ph_calibrated">-</div><span class="unit"></span></div>
             <div class="data-card"><div class="label">EC</div><div class="value" id="latest-ec_calibrated">-</div><span class="unit">uS/cm</span></div>
         </div>
-        <h3>Soil</h3>
+        <h3>토양</h3>
         <div class="data-grid">
             <div class="data-card"><div class="label">Soil Temp</div><div class="value" id="latest-soil_temperature">-</div><span class="unit">*C</span></div>
             <div class="data-card"><div class="label">Soil Humidity</div><div class="value" id="latest-soil_humidity">-</div><span class="unit">%</span></div>
@@ -178,7 +178,7 @@
     </div>
 
     <div id="graphs" class="tab-content">
-        <h2>Graphs</h2>
+        <h2>그래프</h2>
         <div class="graph-controls">
             <label for="timespan-select">Select Time Range:</label>
             <select id="timespan-select">
@@ -201,13 +201,13 @@
         <div class="chart-container"><canvas id="soilChart"></canvas></div>
     </div>
     <div id="journal" class="tab-content">
-        <h2>Farm Journal</h2>
+        <h2>농장 일지</h2>
         <div class="journal-layout">
             <div id="journal-calendar-container">
                 <input type="text" id="journal-calendar" style="display:none;">
             </div>
             <div class="journal-display">
-                <h3><span id="display-date">Today</span>'s Journal</h3>
+                <h3><span id="display-date">오늘</span>의 일</h3>
                 <div id="journal-content-display">
                     <p>Please select a date from the calendar.</p>
                 </div>
@@ -215,20 +215,20 @@
                 <a id="download-image-link" href="#" class="download-btn" style="display: none;" download>Download Image</a>
             </div>
             <div class="journal-form">
-                <h3>Edit Journal</h3>
+                <h3>일지 수정</h3>
                 <form id="journal-entry-form">
                     <input type="hidden" id="form-date">
-                    <label for="farm_work">1. Farm Work:</label>
+                    <label for="farm_work">1. 농작업:</label>
                     <textarea id="farm_work" name="farm_work"></textarea><br><br>
-                    <label for="pesticide">2. Pesticide:</label>
+                    <label for="pesticide">2. 농약:</label>
                     <textarea id="pesticide" name="pesticide"></textarea><br><br>
-                    <label for="fertilizer">3. Fertilizer:</label>
+                    <label for="fertilizer">3. 비료:</label>
                     <textarea id="fertilizer" name="fertilizer"></textarea><br><br>
-                    <label for="harvest">4. Harvest:</label>
+                    <label for="harvest">4. 수확:</label>
                     <textarea id="harvest" name="harvest"></textarea><br><br>
-                    <label for="notes">5. Notes:</label>
+                    <label for="notes">5. 특이사항:</label>
                     <textarea id="notes" name="notes"></textarea><br><br>
-                    <button type="button" id="save-journal-btn">Save Journal</button>
+                    <button type="button" id="save-journal-btn">일지 저장</button>
                     <div id="journal-status" class="status-message"></div>
                 </form>
             </div>
@@ -238,20 +238,20 @@
     <div id="calibration" class="tab-content">
         <div class="calibration-section">
             <div class="calibration-box">
-                <h2>Weight Sensor</h2>
+                <h2>무게 보정</h2>
                 <p><strong>Offset:</strong> <span id="current-offset">...</span></p>
                 <p><strong>Scale:</strong> <span id="current-scale">...</span></p>
                 <hr>
-                <p><strong>Step 1: Tare</strong><br>Remove everything from the scale and press the button.</p>
-                <button id="tare-btn">Tare (Set to 0)</button>
+                <p><strong>1단계: 영점</strong><br>아무것도 올리지 마시고 '영점' 버튼을 눌러 주세요.</p>
+                <button id="tare-btn">영점 (0)</button>
                 <br><br>
-                <p><strong>Step 2: Calibrate</strong><br>Place a known weight on the scale and enter the weight below.</p>
+                <p><strong>2단계: 보정</strong><br>아는 무게를 올리시고 무게를 입력해 주세요.</p>
                 <input type="number" id="known-weight" placeholder="e.g., 100"> <span>g</span>
                 <button id="calibrate-btn" disabled>Calibrate</button>
                 <div id="weight-status" class="status-message"></div>
             </div>
             <div class="calibration-box">
-                <h2>pH Sensor</h2>
+                <h2>pH 보정</h2>
                 <p><strong>Slope:</strong> <span id="current-ph-slope">...</span></p>
                 <p><strong>Intercept:</strong> <span id="current-ph-intercept">...</span></p>
                 <hr>
@@ -301,10 +301,10 @@
     </div>
 
     <div class="footer-right">
-        <p> Metafarmers | Lee KyuWha </p>
-        <p> Business Registration No.: 264-87-02694 </p>
-        <p> Address: 1922, Nambusunhwan-ro, Gwanak-gu, Seoul, Republic of Korea </p>
-        <p> Contacts: contact@metafarmers.ai</p>
+        <p> (주)메타파머스 | 대표: 이규화 </p>
+        <p> 사업자 번호: 264-87-02694 </p>
+        <p> 주소: 서울특별시 관악구 남부순환로 1922 </p>
+        <p> 문의: contact@metafarmers.ai</p>
     </div>
 </footer>
 
@@ -438,10 +438,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initializeCharts() {
         const commonOptions = { responsive: true, maintainAspectRatio: false };
-        charts.weight = createChart('weightChart', { type: 'line', data: { labels: [], datasets: [{ label: 'Weight (g)', data: [], borderColor: '#8e5ea2', fill: false }] }, options: { ...commonOptions, title: { display: true, text: 'Weight' }, scales: { yAxes: [{ ticks: { suggestedMin: 0 } }] } } });
-        charts.env = createChart('envChart', { type: 'line', data: { labels: [], datasets: [ { label: 'Temp (*C)', data: [], borderColor: '#ff6384', yAxisID: 'y_temp', fill: false }, { label: 'Humidity (%)', data: [], borderColor: '#36a2eb', yAxisID: 'y_hum', fill: false }, { label: 'CO2 (ppm)', data: [], borderColor: '#4bc0c0', yAxisID: 'y_co2', fill: false }, { label: 'Insolation (W/m^2)', data: [], borderColor: '#ffce56', yAxisID: 'y_W/m^2', fill: false } ] }, options: { ...commonOptions, title: { display: true, text: 'Environment' }, scales: { yAxes: [ { id: 'y_temp', type: 'linear', position: 'left', ticks: { fontColor: '#ff6384', suggestedMin: 0, suggestedMax: 50 } }, { id: 'y_hum', type: 'linear', position: 'right', ticks: { fontColor: '#36a2eb', suggestedMin: 0, suggestedMax: 100 }, gridLines: { drawOnChartArea: false } }, { id: 'y_co2', type: 'linear', position: 'right', ticks: { fontColor: '#4bc0c0', suggestedMin: 0, suggestedMax: 5000 }, gridLines: { drawOnChartArea: false } }, { id: 'y_W/m^2', type: 'linear', position: 'left', ticks: { fontColor: '#ffce56', suggestedMin: 0, suggestedMax: 60000 }, gridLines: { drawOnChartArea: false }, offset: true } ] } } });
-        charts.water = createChart('waterChart', { type: 'line', data: { labels: [], datasets: [ { label: 'pH', data: [], borderColor: '#ff9f40', yAxisID: 'y_ph', fill: false }, { label: 'EC (uS/cm)', data: [], borderColor: '#c9cbcf', yAxisID: 'y_ec', fill: false }, { label: 'Water Temp (*C)', data: [], borderColor: '#33A5FF', yAxisID: 'y_wtemp', fill: false } ] }, options: { ...commonOptions, title: { display: true, text: 'Water Solution' }, scales: { yAxes: [ { id: 'y_ph', type: 'linear', position: 'left', ticks: { fontColor: '#ff9f40', suggestedMin: 0, suggestedMax: 14 } }, { id: 'y_ec', type: 'linear', position: 'right', ticks: { fontColor: '#c9cbcf', suggestedMin: 0, suggestedMax: 2500 }, gridLines: { drawOnChartArea: false } }, { id: 'y_wtemp', type: 'linear', position: 'left', offset: true, ticks: { fontColor: '#33A5FF', suggestedMin: 0, suggestedMax: 50 }, gridLines: { drawOnChartArea: false } } ] } } });
-        charts.soil = createChart('soilChart', { type: 'line', data: { labels: [], datasets: [ { label: 'Soil Temp (*C)', data: [], borderColor: '#D9534F', yAxisID: 'y_soil_temp', fill: false }, { label: 'Soil Humidity (%)', data: [], borderColor: '#5CB85C', yAxisID: 'y_soil_hum', fill: false }, { label: 'Soil EC (uS/cm)', data: [], borderColor: '#333', yAxisID: 'y_soil_ec', fill: false }, { label: 'Soil pH', data: [], borderColor: '#F0AD4E', yAxisID: 'y_soil_ph', fill: false } ] }, options: { ...commonOptions, title: { display: true, text: 'Soil' }, scales: { yAxes: [ { id: 'y_soil_temp', type: 'linear', position: 'left', ticks: { fontColor: '#D9534F', suggestedMin: 0, suggestedMax: 50 } }, { id: 'y_soil_hum', type: 'linear', position: 'right', ticks: { fontColor: '#5CB85C', suggestedMin: 0, suggestedMax: 100 }, gridLines: { drawOnChartArea: false } }, { id: 'y_soil_ec', type: 'linear', position: 'right', ticks: { fontColor: '#333', suggestedMin: 0, suggestedMax: 2500 }, gridLines: { drawOnChartArea: false } }, { id: 'y_soil_ph', type: 'linear', position: 'left', ticks: { fontColor: '#F0AD4E', suggestedMin: 0, suggestedMax: 14 }, gridLines: { drawOnChartArea: false }, offset: true } ] } } });
+        charts.weight = createChart('weightChart', { type: 'line', data: { labels: [], datasets: [{ label: '무게 (g)', data: [], borderColor: '#8e5ea2', fill: false }] }, options: { ...commonOptions, title: { display: true, text: '무게' }, scales: { yAxes: [{ ticks: { suggestedMin: 0 } }] } } });
+        charts.env = createChart('envChart', { type: 'line', data: { labels: [], datasets: [ { label: '온도 (*C)', data: [], borderColor: '#ff6384', yAxisID: 'y_temp', fill: false }, { label: '습도 (%)', data: [], borderColor: '#36a2eb', yAxisID: 'y_hum', fill: false }, { label: '이산화탄소 (ppm)', data: [], borderColor: '#4bc0c0', yAxisID: 'y_co2', fill: false }, { label: '일사량 (W/m^2)', data: [], borderColor: '#ffce56', yAxisID: 'y_W/m^2', fill: false } ] }, options: { ...commonOptions, title: { display: true, text: '환경' }, scales: { yAxes: [ { id: 'y_temp', type: 'linear', position: 'left', ticks: { fontColor: '#ff6384', suggestedMin: 0, suggestedMax: 50 } }, { id: 'y_hum', type: 'linear', position: 'right', ticks: { fontColor: '#36a2eb', suggestedMin: 0, suggestedMax: 100 }, gridLines: { drawOnChartArea: false } }, { id: 'y_co2', type: 'linear', position: 'right', ticks: { fontColor: '#4bc0c0', suggestedMin: 0, suggestedMax: 5000 }, gridLines: { drawOnChartArea: false } }, { id: 'y_W/m^2', type: 'linear', position: 'left', ticks: { fontColor: '#ffce56', suggestedMin: 0, suggestedMax: 60000 }, gridLines: { drawOnChartArea: false }, offset: true } ] } } });
+        charts.water = createChart('waterChart', { type: 'line', data: { labels: [], datasets: [ { label: 'pH', data: [], borderColor: '#ff9f40', yAxisID: 'y_ph', fill: false }, { label: 'EC (uS/cm)', data: [], borderColor: '#c9cbcf', yAxisID: 'y_ec', fill: false }, { label: '수온 (*C)', data: [], borderColor: '#33A5FF', yAxisID: 'y_wtemp', fill: false } ] }, options: { ...commonOptions, title: { display: true, text: '배액' }, scales: { yAxes: [ { id: 'y_ph', type: 'linear', position: 'left', ticks: { fontColor: '#ff9f40', suggestedMin: 0, suggestedMax: 14 } }, { id: 'y_ec', type: 'linear', position: 'right', ticks: { fontColor: '#c9cbcf', suggestedMin: 0, suggestedMax: 2500 }, gridLines: { drawOnChartArea: false } }, { id: 'y_wtemp', type: 'linear', position: 'left', offset: true, ticks: { fontColor: '#33A5FF', suggestedMin: 0, suggestedMax: 50 }, gridLines: { drawOnChartArea: false } } ] } } });
+        charts.soil = createChart('soilChart', { type: 'line', data: { labels: [], datasets: [ { label: '토양 온도 (*C)', data: [], borderColor: '#D9534F', yAxisID: 'y_soil_temp', fill: false }, { label: '토양 습도 (%)', data: [], borderColor: '#5CB85C', yAxisID: 'y_soil_hum', fill: false }, { label: '토양 EC (uS/cm)', data: [], borderColor: '#333', yAxisID: 'y_soil_ec', fill: false }, { label: '토양 pH', data: [], borderColor: '#F0AD4E', yAxisID: 'y_soil_ph', fill: false } ] }, options: { ...commonOptions, title: { display: true, text: '토양' }, scales: { yAxes: [ { id: 'y_soil_temp', type: 'linear', position: 'left', ticks: { fontColor: '#D9534F', suggestedMin: 0, suggestedMax: 50 } }, { id: 'y_soil_hum', type: 'linear', position: 'right', ticks: { fontColor: '#5CB85C', suggestedMin: 0, suggestedMax: 100 }, gridLines: { drawOnChartArea: false } }, { id: 'y_soil_ec', type: 'linear', position: 'right', ticks: { fontColor: '#333', suggestedMin: 0, suggestedMax: 2500 }, gridLines: { drawOnChartArea: false } }, { id: 'y_soil_ph', type: 'linear', position: 'left', ticks: { fontColor: '#F0AD4E', suggestedMin: 0, suggestedMax: 14 }, gridLines: { drawOnChartArea: false }, offset: true } ] } } });
         updateAllCharts();
     }
 
@@ -524,7 +524,7 @@ document.addEventListener('DOMContentLoaded', () => {
             inline: true,
             defaultDate: "today",
             dateFormat: "Y-m-d",
-            // locale: "ko", // Removed for English
+            locale: "ko",
             onChange: function(selectedDates, dateStr) { loadJournalEntry(dateStr); }
         });
         loadJournalEntry(new Date().toISOString().split('T')[0]);
@@ -547,7 +547,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 displayDiv.innerHTML = `<h4>1. Farm Work:</h4><p>${data.farm_work||'None'}</p><h4>2. Pesticide:</h4><p>${data.pesticide||'None'}</p><h4>3. Fertilizer:</h4><p>${data.fertilizer||'None'}</p><h4>4. Harvest:</h4><p>${data.harvest||'None'}</p><h4>5. Notes:</h4><p>${data.notes||'None'}</p>`;
             } else {
                 form.reset();
-                displayDiv.innerHTML = '<p>No journal entry found for this date. Please create one.</p>';
+                displayDiv.innerHTML = '<p>이 날의 일지가 없습니다. 일지를 작성해 주세요.</p>';
             }
         } catch (error) {
             console.error("Error loading journal:", error);
@@ -558,9 +558,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function saveJournalEntry() {
         const date = document.getElementById('form-date').value;
-        if (!date) { setStatus('journal-status', 'Please select a date from the calendar first.', 'error'); return; }
+        if (!date) { setStatus('journal-status', '달력에서 날짜부터 선택해 주세요.', 'error'); return; }
         const formData = { date, farm_work: document.getElementById('farm_work').value, pesticide: document.getElementById('pesticide').value, fertilizer: document.getElementById('fertilizer').value, harvest: document.getElementById('harvest').value, notes: document.getElementById('notes').value };
-        setStatus('journal-status', 'Saving...', 'info');
+        setStatus('journal-status', '저장 중입니다...', 'info');
         try {
             const response = await fetchWithTimeout('/journal_api/', { method: 'POST', body: JSON.stringify(formData) });
             const result = await response.json();
@@ -568,7 +568,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 setStatus('journal-status', result.message, 'success');
                 loadJournalEntry(date);
             } else {
-                setStatus('journal-status', `Save failed: ${result.message || 'Server error'}`, 'error');
+                setStatus('journal-status', `저장 실패: ${result.message || 'Server error'}`, 'error');
             }
         } catch (error) {
             setStatus('journal-status', 'Network error while saving.', 'error');
@@ -593,14 +593,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function performTare() {
-        setStatus('weight-status', 'Taring... Please wait.', 'info');
+        setStatus('weight-status', '영점을 맞추고 있습니다... 잠시만 기다려 주세요.', 'info');
         document.getElementById('tare-btn').disabled = true;
         const result = await performApiAction('tare');
         if (result.status === 'success') {
             calibrationState.weight_offset = result.offset;
             document.getElementById('current-offset').textContent = result.offset.toFixed(2);
             document.getElementById('calibrate-btn').disabled = false;
-            setStatus('weight-status', 'Tare successful!', 'success');
+            setStatus('weight-status', '영점 성공!', 'success');
         } else {
             setStatus('weight-status', `Error: ${result.message}`, 'error');
         }
