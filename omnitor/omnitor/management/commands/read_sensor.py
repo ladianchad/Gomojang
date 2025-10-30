@@ -76,10 +76,18 @@ class Command(BaseCommand):
                 calibrated_data['weight_calibrated'] = (smoothed_raw_data['weight_raw'] - settings.weight_offset) / settings.weight_scale if settings.weight_scale != 0 else 0
 
                 # pH Calibration (2-point + temperature compensation)
+                # 1. 2점 보정식을 적용하여 25°C 기준의 pH 값을 계산합니다. (pH(25)에 해당)
                 base_ph = (smoothed_raw_data['ph_voltage'] * settings.ph_slope) + settings.ph_intercept
+                
+                # 2. 기준 온도(25°C)와의 차이를 계산합니다. (T-25에 해당)
                 temp_diff = smoothed_raw_data['water_temperature'] - 25.0
-                ph_diff_from_neutral = base_ph - 7.0
-                ph_compensation = 0.003 * temp_diff * ph_diff_from_neutral
+                
+                # 3. 사용자님의 공식에 따라 온도 보상 값을 계산합니다.
+                #    ph_compensation = 0.017 * (T - 25)
+                ph_compensation = 0.017 * temp_diff
+                
+                # 4. 25°C 기준 pH 값에서 온도 보상 값을 빼서 최종 pH(T)를 구합니다.
+                #    pH(T) = pH(25) - ph_compensation
                 calibrated_data['ph_calibrated'] = base_ph - ph_compensation
 
                 # EC Calibration (temp compensation + formula + 2-point)
