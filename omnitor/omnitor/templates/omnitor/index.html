@@ -5,6 +5,11 @@
     <meta charset="UTF-8">
     <title>omnitor</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/min/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@0.1.1/dist/chartjs-adapter-moment.min.js"></script>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -204,36 +209,36 @@
                 <p><strong>Slope:</strong> <span id="current-ph-slope">...</span></p>
                 <p><strong>Intercept:</strong> <span id="current-ph-intercept">...</span></p>
                 <hr>
-                <p><strong>Point 1 (e.g., pH 7.0)</strong></p>
+                <p><strong>값 1 (e.g., pH 7.0)</strong></p>
                 <input type="number" step="0.1" id="ph-val-1" value="7.0">
-                <button id="ph-cal-btn-1">Read Sensor Value</button>
-                <p><em>Value 1: <span id="ph-volt-1">...</span></em></p>
+                <button id="ph-cal-btn-1">값 읽기</button>
+                <p><em>값 1: <span id="ph-volt-1">...</span></em></p>
                 <br>
-                <p><strong>Point 2 (e.g., pH 4.0)</strong></p>
+                <p><strong>값 2 (e.g., pH 4.0)</strong></p>
                 <input type="number" step="0.1" id="ph-val-2" value="4.0">
-                <button id="ph-cal-btn-2">Read Sensor Value</button>
-                <p><em>Value 2: <span id="ph-volt-2">...</span></em></p>
+                <button id="ph-cal-btn-2">값 읽기</button>
+                <p><em>값 2: <span id="ph-volt-2">...</span></em></p>
                 <div id="ph-status" class="status-message"></div>
             </div>
             <div class="calibration-box">
-                <h2>EC Sensor</h2>
+                <h2>EC 보정</h2>
                 <p><strong>Slope:</strong> <span id="current-ec-slope">...</span></p>
                 <p><strong>Intercept:</strong> <span id="current-ec-intercept">...</span></p>
                 <hr>
-                <p><strong>Point 1 (e.g., 700 uS/cm)</strong></p>
+                <p><strong>값 1 (e.g., 700 uS/cm)</strong></p>
                 <input type="number" id="ec-val-1" value="700">
-                <button id="ec-cal-btn-1">Read Sensor Value</button>
-                <p><em>Value 1: <span id="ec-volt-1">...</span></em></p>
+                <button id="ec-cal-btn-1">값 읽기</button>
+                <p><em>값 1: <span id="ec-volt-1">...</span></em></p>
                 <br>
-                <p><strong>Point 2 (e.g., 1500 uS/cm)</strong></p>
+                <p><strong> 값 2 (e.g., 1500 uS/cm)</strong></p>
                 <input type="number" id="ec-val-2" value="1500">
-                <button id="ec-cal-btn-2">Read Sensor Value</button>
-                <p><em>Value 2: <span id="ec-volt-2">...</span></em></p>
+                <button id="ec-cal-btn-2">값 읽기</button>
+                <p><em>값 2: <span id="ec-volt-2">...</span></em></p>
                 <div id="ec-status" class="status-message"></div>
             </div>
         </div>
          <div style="text-align:center; margin-top: 30px;">
-            <button id="save-settings-btn">Save All Calibration Settings (Important!)</button>
+            <button id="save-settings-btn">보정 설정 저장 (꼭 눌러 주세요!)</button>
             <div id="save-status" class="status-message" style="margin: 15px auto 0; max-width: 500px;"></div>
         </div>
     </div>
@@ -329,11 +334,20 @@ document.addEventListener('DOMContentLoaded', () => {
             
             document.getElementById('latest-timestamp').textContent = data.timestamp;
             const fields = ['air_temperature', 'air_humidity', 'co2', 'insolation', 'water_temperature', 'weight_calibrated', 'ph_calibrated', 'ec_calibrated', 'soil_temperature', 'soil_humidity', 'soil_conductivity', 'soil_ph'];
+            
             fields.forEach(field => {
                 const el = document.getElementById(`latest-${field}`);
                 if (el) {
                     const value = data[field];
-                    el.textContent = (typeof value === 'number') ? value.toFixed(2) : (value || '-');
+                    // --- MODIFICATION: Check for negative and display 0 ---
+                    let displayValue = (typeof value === 'number') ? value : null;
+                    
+                    // 0 미만인 경우 0으로 표시 (온도 제외)
+                    if (displayValue !== null && displayValue < 0 && field.indexOf('temperature') === -1) {
+                        displayValue = 0;
+                    }
+                    
+                    el.textContent = (displayValue !== null) ? displayValue.toFixed(2) : (value || '-');
                 }
             });
         } catch (error) {
@@ -386,82 +400,142 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initializeCharts() {
-        const commonOptions = { responsive: true, maintainAspectRatio: false };
-        charts.weight = createChart('weightChart', { type: 'line', data: { labels: [], datasets: [{ label: '무게 (g)', data: [], borderColor: '#8e5ea2', fill: false }] }, options: { ...commonOptions, title: { display: true, text: '무게' }, scales: { yAxes: [{ ticks: { suggestedMin: 0 } }] } } });
-        charts.env = createChart('envChart', { type: 'line', data: { labels: [], datasets: [ { label: '온도 (*C)', data: [], borderColor: '#ff6384', yAxisID: 'y_temp', fill: false }, { label: '습도 (%)', data: [], borderColor: '#36a2eb', yAxisID: 'y_hum', fill: false }, { label: '이산화탄소 (ppm)', data: [], borderColor: '#4bc0c0', yAxisID: 'y_co2', fill: false }, { label: '일사량 (W/m^2)', data: [], borderColor: '#ffce56', yAxisID: 'y_W/m^2', fill: false } ] }, options: { ...commonOptions, title: { display: true, text: '환경' }, scales: { yAxes: [ { id: 'y_temp', type: 'linear', position: 'left', ticks: { fontColor: '#ff6384', suggestedMin: 0, suggestedMax: 50 } }, { id: 'y_hum', type: 'linear', position: 'right', ticks: { fontColor: '#36a2eb', suggestedMin: 0, suggestedMax: 100 }, gridLines: { drawOnChartArea: false } }, { id: 'y_co2', type: 'linear', position: 'right', ticks: { fontColor: '#4bc0c0', suggestedMin: 0, suggestedMax: 5000 }, gridLines: { drawOnChartArea: false } }, { id: 'y_W/m^2', type: 'linear', position: 'left', ticks: { fontColor: '#ffce56', suggestedMin: 0, suggestedMax: 60000 }, gridLines: { drawOnChartArea: false }, offset: true } ] } } });
-        charts.water = createChart('waterChart', { type: 'line', data: { labels: [], datasets: [ { label: 'pH', data: [], borderColor: '#ff9f40', yAxisID: 'y_ph', fill: false }, { label: 'EC (uS/cm)', data: [], borderColor: '#c9cbcf', yAxisID: 'y_ec', fill: false }, { label: '수온 (*C)', data: [], borderColor: '#33A5FF', yAxisID: 'y_wtemp', fill: false } ] }, options: { ...commonOptions, title: { display: true, text: '배액' }, scales: { yAxes: [ { id: 'y_ph', type: 'linear', position: 'left', ticks: { fontColor: '#ff9f40', suggestedMin: 0, suggestedMax: 14 } }, { id: 'y_ec', type: 'linear', position: 'right', ticks: { fontColor: '#c9cbcf', suggestedMin: 0, suggestedMax: 2500 }, gridLines: { drawOnChartArea: false } }, { id: 'y_wtemp', type: 'linear', position: 'left', offset: true, ticks: { fontColor: '#33A5FF', suggestedMin: 0, suggestedMax: 50 }, gridLines: { drawOnChartArea: false } } ] } } });
-        charts.soil = createChart('soilChart', { type: 'line', data: { labels: [], datasets: [ { label: '토양 온도 (*C)', data: [], borderColor: '#D9534F', yAxisID: 'y_soil_temp', fill: false }, { label: '토양 습도 (%)', data: [], borderColor: '#5CB85C', yAxisID: 'y_soil_hum', fill: false }, { label: '토양 EC (uS/cm)', data: [], borderColor: '#333', yAxisID: 'y_soil_ec', fill: false }, { label: '토양 pH', data: [], borderColor: '#F0AD4E', yAxisID: 'y_soil_ph', fill: false } ] }, options: { ...commonOptions, title: { display: true, text: '토양' }, scales: { yAxes: [ { id: 'y_soil_temp', type: 'linear', position: 'left', ticks: { fontColor: '#D9534F', suggestedMin: 0, suggestedMax: 50 } }, { id: 'y_soil_hum', type: 'linear', position: 'right', ticks: { fontColor: '#5CB85C', suggestedMin: 0, suggestedMax: 100 }, gridLines: { drawOnChartArea: false } }, { id: 'y_soil_ec', type: 'linear', position: 'right', ticks: { fontColor: '#333', suggestedMin: 0, suggestedMax: 2500 }, gridLines: { drawOnChartArea: false } }, { id: 'y_soil_ph', type: 'linear', position: 'left', ticks: { fontColor: '#F0AD4E', suggestedMin: 0, suggestedMax: 14 }, gridLines: { drawOnChartArea: false }, offset: true } ] } } });
-        updateAllCharts();
+        const commonXAxisOptions = {
+            type: 'time', 
+            time: {
+                unit: 'minute', 
+                stepSize: 1,
+                tooltipFormat: 'YYYY-MM-DD HH:mm', 
+                displayFormats: { 
+                    minute: 'HH:mm',
+                    hour: 'HH:mm',
+                    day: 'MM-DD'
+                }
+            },
+            scaleLabel: {
+                display: true,
+                labelString: 'Time'
+            }
+        };
+
+        const commonOptions = { 
+            responsive: true, 
+            maintainAspectRatio: false
+        };
+
+        charts.weight = createChart('weightChart', { type: 'line', data: { labels: [], datasets: [{ label: '무게 (g)', data: [], borderColor: '#8e5ea2', fill: false }] }, options: { ...commonOptions, title: { display: true, text: '무게' }, scales: { xAxes: [commonXAxisOptions], yAxes: [{ ticks: { suggestedMin: 0 } }] } } });
+        charts.env = createChart('envChart', { type: 'line', data: { labels: [], datasets: [ { label: '온도 (°C)', data: [], borderColor: '#ff6384', yAxisID: 'y_temp', fill: false }, { label: '습도 (%)', data: [], borderColor: '#36a2eb', yAxisID: 'y_hum', fill: false }, { label: '이산화탄소 (ppm)', data: [], borderColor: '#4bc0c0', yAxisID: 'y_co2', fill: false }, { label: '일사량 (W/m²)', data: [], borderColor: '#ffce56', yAxisID: 'y_insolation', fill: false } ] }, options: { ...commonOptions, title: { display: true, text: '환경' }, scales: { xAxes: [commonXAxisOptions], yAxes: [ { id: 'y_temp', type: 'linear', position: 'left', ticks: { fontColor: '#ff6384', suggestedMin: 0, suggestedMax: 50 } }, { id: 'y_hum', type: 'linear', position: 'right', ticks: { fontColor: '#36a2eb', suggestedMin: 0, suggestedMax: 100 }, gridLines: { drawOnChartArea: false } }, { id: 'y_co2', type: 'linear', position: 'right', ticks: { fontColor: '#4bc0c0', suggestedMin: 0, suggestedMax: 5000 }, gridLines: { drawOnChartArea: false } }, { id: 'y_insolation', type: 'linear', position: 'left', ticks: { fontColor: '#ffce56', suggestedMin: 0, suggestedMax: 1000 }, gridLines: { drawOnChartArea: false }, offset: true } ] } } });
+        charts.water = createChart('waterChart', { type: 'line', data: { labels: [], datasets: [ { label: 'pH', data: [], borderColor: '#ff9f40', yAxisID: 'y_ph', fill: false }, { label: 'EC (µS/cm)', data: [], borderColor: '#c9cbcf', yAxisID: 'y_ec', fill: false }, { label: '수온 (°C)', data: [], borderColor: '#33A5FF', yAxisID: 'y_wtemp', fill: false } ] }, options: { ...commonOptions, title: { display: true, text: '배액' }, scales: { xAxes: [commonXAxisOptions], yAxes: [ { id: 'y_ph', type: 'linear', position: 'left', ticks: { fontColor: '#ff9f40', suggestedMin: 0, suggestedMax: 14 } }, { id: 'y_ec', type: 'linear', position: 'right', ticks: { fontColor: '#c9cbcf', suggestedMin: 0, suggestedMax: 2500 }, gridLines: { drawOnChartArea: false } }, { id: 'y_wtemp', type: 'linear', position: 'left', offset: true, ticks: { fontColor: '#33A5FF', suggestedMin: 0, suggestedMax: 50 }, gridLines: { drawOnChartArea: false } } ] } } });
+        charts.soil = createChart('soilChart', { type: 'line', data: { labels: [], datasets: [ { label: '토양 온도 (°C)', data: [], borderColor: '#D9534F', yAxisID: 'y_soil_temp', fill: false }, { label: '토양 습도 (%)', data: [], borderColor: '#5CB85C', yAxisID: 'y_soil_hum', fill: false }, { label: '토양 EC (µS/cm)', data: [], borderColor: '#333', yAxisID: 'y_soil_ec', fill: false }, { label: '토양 pH', data: [], borderColor: '#F0AD4E', yAxisID: 'y_soil_ph', fill: false } ] }, options: { ...commonOptions, title: { display: true, text: '토양' }, scales: { xAxes: [commonXAxisOptions], yAxes: [ { id: 'y_soil_temp', type: 'linear', position: 'left', ticks: { fontColor: '#D9534F', suggestedMin: 0, suggestedMax: 50 } }, { id: 'y_soil_hum', type: 'linear', position: 'right', ticks: { fontColor: '#5CB85C', suggestedMin: 0, suggestedMax: 100 }, gridLines: { drawOnChartArea: false } }, { id: 'y_soil_ec', type: 'linear', position: 'right', ticks: { fontColor: '#333', suggestedMin: 0, suggestedMax: 2500 }, gridLines: { drawOnChartArea: false } }, { id: 'y_soil_ph', type: 'linear', position: 'left', ticks: { fontColor: '#F0AD4E', suggestedMin: 0, suggestedMax: 14 }, gridLines: { drawOnChartArea: false }, offset: true } ] } } });
     }
 
     async function updateAllCharts() {
         const selectedOption = document.getElementById('timespan-select').value;
         let apiUrl = '/historical_data_api/';
         let queryParams = '';
+        
+        // --- NEW: Define time unit based on selection ---
+        let timeUnit = 'minute';
+        let stepSize = 1;
+        let displayFormat = 'HH:mm'; // X축 레이블 형식
 
         if (selectedOption === 'custom') {
-            // Ensure date picker is initialized and has a valid range selected
             if (!dateRangePicker || dateRangePicker.selectedDates.length !== 2) {
-                setStatus('graph-status', 'Please select a valid start and end date using the date picker.', 'info'); 
-                // Clear charts or leave them as they are? Clear is safer.
-                Object.values(charts).forEach(chart => {
-                    chart.data.labels = [];
-                    chart.data.datasets.forEach(dataset => dataset.data = []);
-                    chart.update();
-                });
-                return; 
+                 setStatus('graph-status', '날짜 범위를 선택해 주세요.', 'info'); 
+                 Object.values(charts).forEach(chart => {
+                     chart.data.labels = [];
+                     chart.data.datasets.forEach(dataset => dataset.data = []);
+                     chart.update();
+                 });
+                 return; 
             }
             const startDate = dateRangePicker.selectedDates[0].toISOString().split('T')[0];
             const endDate = dateRangePicker.selectedDates[1].toISOString().split('T')[0];
             queryParams = `?start_date=${startDate}&end_date=${endDate}`;
-            console.log(`Fetching data from ${startDate} to ${endDate}`);
+            
+            // --- Set unit for custom range (6 hour steps) ---
+            timeUnit = 'hour';
+            stepSize = 6; 
+            displayFormat = 'MM-DD HH:mm';
         } else {
             queryParams = `?timespan=${selectedOption}`;
-            console.log(`Fetching data for timespan: ${selectedOption}`);
+            // --- Set unit for relative timespan ---
+            if (selectedOption === '10m' || selectedOption === '1h') {
+                timeUnit = 'minute';
+                stepSize = 1; // 1-minute steps
+                displayFormat = 'HH:mm';
+            } else if (selectedOption === '24h') {
+                timeUnit = 'hour';
+                stepSize = 3; // 3-hour steps
+                displayFormat = 'HH:mm';
+            } else if (selectedOption === '7d') {
+                timeUnit = 'hour';
+                stepSize = 6; // 6-hour steps
+                displayFormat = 'MM-DD HH:mm';
+            }
         }
         
-        setStatus('graph-status', 'Loading graph data...', 'info'); 
+        setStatus('graph-status', '그래프 데이터 로딩 중...', 'info'); 
 
         try {
             const response = await fetchWithTimeout(apiUrl + queryParams);
             if (!response.ok) {
-                setStatus('graph-status', `Failed to load data: ${response.status}`, 'error');
-                return;
+                 setStatus('graph-status', `데이터 로드 실패: ${response.status}`, 'error');
+                 return;
             }
             const data = await response.json();
 
             if (!data || !data.labels || data.labels.length === 0) {
-                setStatus('graph-status', 'No data found for the selected range.', 'info');
+                setStatus('graph-status', '선택된 범위의 데이터가 없습니다.', 'info');
                  Object.values(charts).forEach(chart => {
-                    chart.data.labels = [];
-                    chart.data.datasets.forEach(dataset => dataset.data = []);
-                    chart.update();
-                });
+                     chart.data.labels = [];
+                     chart.data.datasets.forEach(dataset => dataset.data = []);
+                     chart.update();
+                 });
                 return;
             }
+
+            // --- NEW: Update X-axis time unit on all charts ---
+            for (const chartKey in charts) {
+                const chart = charts[chartKey];
+                const xAxis = chart.options.scales.xAxes[0];
+                xAxis.time.unit = timeUnit;
+                xAxis.time.stepSize = stepSize;
+                xAxis.time.displayFormats = { [timeUnit]: displayFormat };
+            }
+
             const map = {
                 weight: { chart: charts.weight, datasets: [data.datasets.weight] },
                 env: { chart: charts.env, datasets: [data.datasets.air_temperature, data.datasets.air_humidity, data.datasets.co2, data.datasets.insolation] },
                 water: { chart: charts.water, datasets: [data.datasets.ph, data.datasets.ec, data.datasets.water_temperature] },
                 soil: { chart: charts.soil, datasets: [data.datasets.soil_temperature, data.datasets.soil_humidity, data.datasets.soil_conductivity, data.datasets.soil_ph] }
             };
+            
             for (const key in map) {
                 if(map[key].chart) {
                     map[key].chart.data.labels = data.labels;
                     map[key].datasets.forEach((ds, i) => {
                          if (map[key].chart.data.datasets[i]) {
-                             map[key].chart.data.datasets[i].data = ds || []; 
+                             // --- MODIFICATION: Apply Math.max(0, val) to data ---
+                             let processedData = (ds || []).map(val => {
+                                 if (typeof val === 'number' && val < 0) {
+                                     // 온도를 제외한 값들은 0으로 처리
+                                     if (key.indexOf('temp') === -1) return 0;
+                                 }
+                                 return val;
+                             });
+                             map[key].chart.data.datasets[i].data = processedData;
                          }
                     });
                     map[key].chart.update();
                 }
             }
-             setStatus('graph-status', '', 'info'); // Clear status
+             setStatus('graph-status', '', 'info'); 
 
         } catch (error) {
             if (error.name !== 'AbortError') {
                 console.error("Error updating charts:", error);
-                setStatus('graph-status', 'Error loading graph data.', 'error');
+                 setStatus('graph-status', '그래프 로딩 중 오류 발생.', 'error');
             }
         } 
     }
