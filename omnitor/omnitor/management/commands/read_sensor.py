@@ -14,9 +14,11 @@ BAUDRATE = 9600
 MODBUS_PORT = '/dev/ttyUSB0'
 MODBUS_ADDRESS = 1
 MOVING_AVERAGE_WINDOW = 5 # Number of data points to average
+SAVE_INTERVAL_SECONDS = 60 # 1분에 한 번 저장
+LOOP_SLEEP_SECONDS = 0.1 # 0.1초마다 센서 값을 읽음 (CPU 과부하 방지)
 
 class Command(BaseCommand):
-    help = 'Reads data from Arduino and Modbus, applies a moving average filter and calibration, and saves to the database.'
+    help = 'Reads data from Arduino and Modbus, applies a moving average filter and calibration, and saves to the database every 60 seconds.'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -35,6 +37,8 @@ class Command(BaseCommand):
             'soil_conductivity': deque(maxlen=MOVING_AVERAGE_WINDOW),
             'soil_ph': deque(maxlen=MOVING_AVERAGE_WINDOW),
         }
+        self.last_save_time = 0.0
+        self.latest_smoothed_data = None
 
     def apply_smoothing(self, data_dict):
         """Applies a moving average to new data and returns the smoothed values."""
@@ -76,18 +80,9 @@ class Command(BaseCommand):
                 calibrated_data['weight_calibrated'] = (smoothed_raw_data['weight_raw'] - settings.weight_offset) / settings.weight_scale if settings.weight_scale != 0 else 0
 
                 # pH Calibration (2-point + temperature compensation)
-                # 1. 2점 보정식을 적용하여 25°C 기준의 pH 값을 계산합니다. (pH(25)에 해당)
                 base_ph = (smoothed_raw_data['ph_voltage'] * settings.ph_slope) + settings.ph_intercept
-                
-                # 2. 기준 온도(25°C)와의 차이를 계산합니다. (T-25에 해당)
                 temp_diff = smoothed_raw_data['water_temperature'] - 25.0
-                
-                # 3. 사용자님의 공식에 따라 온도 보상 값을 계산합니다.
-                #    ph_compensation = 0.017 * (T - 25)
                 ph_compensation = 0.017 * temp_diff
-                
-                # 4. 25°C 기준 pH 값에서 온도 보상 값을 빼서 최종 pH(T)를 구합니다.
-                #    pH(T) = pH(25) - ph_compensation
                 calibrated_data['ph_calibrated'] = base_ph - ph_compensation
 
                 # EC Calibration (temp compensation + formula + 2-point)
@@ -98,7 +93,8 @@ class Command(BaseCommand):
                 calibrated_data['ec_calibrated'] = (base_ec * settings.ec_slope) + settings.ec_intercept
 
                 # Return original raw data and the final calibrated data
-                return {**raw_data, **calibrated_data}
+                # 원본 raw 데이터와 최종 보정 데이터를 모두 반환
+                return {**raw_data, **smoothed_raw_data, **calibrated_data}
             
             else:
                 self.stdout.write(self.style.WARNING(f"Warning: Incorrect Arduino data format. (Received {len(parts)} items, expected 8)"))
@@ -145,7 +141,9 @@ class Command(BaseCommand):
         except serial.SerialException as e:
             self.stderr.write(self.style.WARNING(f"Modbus connection failed: {e}. Soil data will be unavailable."))
 
-        self.stdout.write(self.style.SUCCESS("\nStarting data reception. Press Ctrl+C to exit."))
+        self.stdout.write(self.style.SUCCESS(f"\nStarting data reception. Saving to DB every {SAVE_INTERVAL_SECONDS} seconds. Press Ctrl+C to exit."))
+        
+        self.last_save_time = time.time() # 저장 타이머 초기화
 
         while True:
             try:
@@ -165,27 +163,51 @@ class Command(BaseCommand):
                         if soil_data:
                             all_data.update(soil_data)
                         
-                        # Create a new SensorData object with all available data
-                        SensorData.objects.create(
-                            air_temperature=all_data.get('air_temperature'),
-                            air_humidity=all_data.get('air_humidity'),
-                            co2=all_data.get('co2'),
-                            insolation=all_data.get('insolation'),
-                            water_temperature=all_data.get('water_temperature'),
-                            weight_raw=all_data.get('weight_raw'),
-                            weight_calibrated=all_data.get('weight_calibrated'),
-                            ph_voltage=all_data.get('ph_voltage'),
-                            ph_calibrated=all_data.get('ph_calibrated'),
-                            ec_voltage=all_data.get('ec_voltage'),
-                            ec_calibrated=all_data.get('ec_calibrated'),
-                            soil_temperature=all_data.get('soil_temperature'),
-                            soil_humidity=all_data.get('soil_humidity'),
-                            soil_conductivity=all_data.get('soil_conductivity'),
-                            soil_ph=all_data.get('soil_ph'),
-                        )
-                        self.stdout.write(self.style.SUCCESS(f"Saved smoothed data at {time.strftime('%H:%M:%S')}"))
+                        # --- 데이터베이스에 바로 저장하지 않음 ---
+                        # 대신, 가장 최신의 평활화된 데이터를 클래스 변수에 저장
+                        self.latest_smoothed_data = all_data 
+                        # self.stdout.write(self.style.SUCCESS(f"Read data at {time.strftime('%H:%M:%S')}")) # 너무 시끄러우므로 주석 처리
 
-                time.sleep(1)
+                # --- 1분마다 저장하는 로직 ---
+                current_time = time.time()
+                if (current_time - self.last_save_time) >= SAVE_INTERVAL_SECONDS:
+                    if self.latest_smoothed_data:
+                        try:
+                            # 1분마다 self.latest_smoothed_data에 저장된 최신 데이터를 DB에 저장
+                            SensorData.objects.create(
+                                air_temperature=self.latest_smoothed_data.get('air_temperature'),
+                                air_humidity=self.latest_smoothed_data.get('air_humidity'),
+                                co2=self.latest_smoothed_data.get('co2'),
+                                insolation=self.latest_smoothed_data.get('insolation'),
+                                water_temperature=self.latest_smoothed_data.get('water_temperature'),
+                                weight_raw=self.latest_smoothed_data.get('weight_raw'),
+                                weight_calibrated=self.latest_smoothed_data.get('weight_calibrated'),
+                                ph_voltage=self.latest_smoothed_data.get('ph_voltage'),
+                                ph_calibrated=self.latest_smoothed_data.get('ph_calibrated'),
+                                ec_voltage=self.latest_smoothed_data.get('ec_voltage'),
+                                ec_calibrated=self.latest_smoothed_data.get('ec_calibrated'),
+                                soil_temperature=self.latest_smoothed_data.get('soil_temperature'),
+                                soil_humidity=self.latest_smoothed_data.get('soil_humidity'),
+                                soil_conductivity=self.latest_smoothed_data.get('soil_conductivity'),
+                                soil_ph=self.latest_smoothed_data.get('soil_ph'),
+                            )
+                            self.stdout.write(self.style.SUCCESS(f"Saved 1-minute data at {time.strftime('%Y-%m-%d %H:%M:%S')}"))
+                            
+                            # 저장 후, 다음 1분간의 데이터를 기다리기 위해 초기화
+                            self.latest_smoothed_data = None
+                        
+                        except Exception as db_e:
+                            self.stderr.write(self.style.ERROR(f"Database save error: {db_e}"))
+                    
+                    else:
+                        # 지난 1분 동안 수집된 데이터가 없음
+                        self.stdout.write(self.style.WARNING(f"No new sensor data read in the last minute. Skipping save."))
+
+                    # 타이머 리셋
+                    self.last_save_time = current_time 
+                
+                # 루프가 CPU를 100% 사용하지 않도록 짧은 대기 시간
+                time.sleep(LOOP_SLEEP_SECONDS) 
 
             except KeyboardInterrupt:
                 self.stdout.write(self.style.SUCCESS("\nExiting."))
@@ -197,4 +219,3 @@ class Command(BaseCommand):
         if arduino_ser.is_open:
             arduino_ser.close()
             self.stdout.write(self.style.SUCCESS("Arduino serial port closed."))
-
