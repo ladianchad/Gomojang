@@ -163,33 +163,34 @@ class Command(BaseCommand):
                         if soil_data:
                             all_data.update(soil_data)
                         
-                        # --- 데이터베이스에 바로 저장하지 않음 ---
-                        # 대신, 가장 최신의 평활화된 데이터를 클래스 변수에 저장
+                        # 가장 최신의 평활화된 데이터를 클래스 변수에 저장
                         self.latest_smoothed_data = all_data 
-                        # self.stdout.write(self.style.SUCCESS(f"Read data at {time.strftime('%H:%M:%S')}")) # 너무 시끄러우므로 주석 처리
 
                 # --- 1분마다 저장하는 로직 ---
                 current_time = time.time()
                 if (current_time - self.last_save_time) >= SAVE_INTERVAL_SECONDS:
                     if self.latest_smoothed_data:
                         try:
-                            # 1분마다 self.latest_smoothed_data에 저장된 최신 데이터를 DB에 저장
+                            # --- [수정됨] ---
+                            # 값을 DB에 저장하기 전에 0 미만인지 확인합니다.
+                            # .get(key) or 0 : 키가 없거나 값이 None이면 0을 사용합니다.
+                            # max(0, ...): 계산된 값이 0보다 작으면 0을 사용합니다.
                             SensorData.objects.create(
-                                air_temperature=self.latest_smoothed_data.get('air_temperature'),
-                                air_humidity=self.latest_smoothed_data.get('air_humidity'),
-                                co2=self.latest_smoothed_data.get('co2'),
-                                insolation=self.latest_smoothed_data.get('insolation'),
-                                water_temperature=self.latest_smoothed_data.get('water_temperature'),
-                                weight_raw=self.latest_smoothed_data.get('weight_raw'),
-                                weight_calibrated=self.latest_smoothed_data.get('weight_calibrated'),
-                                ph_voltage=self.latest_smoothed_data.get('ph_voltage'),
-                                ph_calibrated=self.latest_smoothed_data.get('ph_calibrated'),
-                                ec_voltage=self.latest_smoothed_data.get('ec_voltage'),
-                                ec_calibrated=self.latest_smoothed_data.get('ec_calibrated'),
-                                soil_temperature=self.latest_smoothed_data.get('soil_temperature'),
-                                soil_humidity=self.latest_smoothed_data.get('soil_humidity'),
-                                soil_conductivity=self.latest_smoothed_data.get('soil_conductivity'),
-                                soil_ph=self.latest_smoothed_data.get('soil_ph'),
+                                air_temperature=max(0, self.latest_smoothed_data.get('air_temperature') or 0),
+                                air_humidity=max(0, self.latest_smoothed_data.get('air_humidity') or 0),
+                                co2=max(0, self.latest_smoothed_data.get('co2') or 0),
+                                insolation=max(0, self.latest_smoothed_data.get('insolation') or 0),
+                                water_temperature=max(0, self.latest_smoothed_data.get('water_temperature') or 0),
+                                weight_raw=max(0, self.latest_smoothed_data.get('weight_raw') or 0),
+                                weight_calibrated=max(0, self.latest_smoothed_data.get('weight_calibrated') or 0),
+                                ph_voltage=max(0, self.latest_smoothed_data.get('ph_voltage') or 0),
+                                ph_calibrated=max(0, self.latest_smoothed_data.get('ph_calibrated') or 0),
+                                ec_voltage=max(0, self.latest_smoothed_data.get('ec_voltage') or 0),
+                                ec_calibrated=max(0, self.latest_smoothed_data.get('ec_calibrated') or 0),
+                                soil_temperature=max(0, self.latest_smoothed_data.get('soil_temperature') or 0),
+                                soil_humidity=max(0, self.latest_smoothed_data.get('soil_humidity') or 0),
+                                soil_conductivity=max(0, self.latest_smoothed_data.get('soil_conductivity') or 0),
+                                soil_ph=max(0, self.latest_smoothed_data.get('soil_ph') or 0),
                             )
                             self.stdout.write(self.style.SUCCESS(f"Saved 1-minute data at {time.strftime('%Y-%m-%d %H:%M:%S')}"))
                             
@@ -219,3 +220,4 @@ class Command(BaseCommand):
         if arduino_ser.is_open:
             arduino_ser.close()
             self.stdout.write(self.style.SUCCESS("Arduino serial port closed."))
+
