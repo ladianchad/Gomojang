@@ -388,7 +388,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initializeCharts() {
         const commonOptions = { responsive: true, maintainAspectRatio: false };
-        charts.weight = createChart('weightChart', { type: 'line', data: { labels: [], datasets: [{ label: '무게 (g)', data: [], borderColor: '#8e5ea2', fill: false }] }, options: { ...commonOptions, title: { display: true, text: '무게' }, scales: { yAxes: [{ ticks: { suggestedMin: 0 } }] } } });
+        charts.weight = createChart('weightChart', { type: 'line', data: { labels: [], datasets: [{ label: '무게 (g)', data: [], borderColor: '#8e5ea2', fill: false }] }, options: { ...commonOptions, title: { display: true, text: '무게' }, scales: { 
+            yAxes: [{ ticks: { suggestedMin: 0 } }],
+            // change time scale of graph
+            xAxes: [{ 
+                type: 'time', 
+                time: { 
+                    tooltipFormat: 'YYYY-MM-DD HH:mm' 
+                },
+                ticks: {
+                    autoSkip: true, 
+                    maxRotation: 0, 
+                    minRotation: 0
+                }
+            }] 
+        } } });
+        
         charts.env = createChart('envChart', { type: 'line', data: { labels: [], datasets: [ { label: '온도 (°C)', data: [], borderColor: '#ff6384', yAxisID: 'y_temp', fill: false }, { label: '습도 (%)', data: [], borderColor: '#36a2eb', yAxisID: 'y_hum', fill: false }, { label: '이산화탄소 (ppm)', data: [], borderColor: '#4bc0c0', yAxisID: 'y_co2', fill: false }, { label: '일사량 (W/m^2)', data: [], borderColor: '#ffce56', yAxisID: 'y_W/m^2', fill: false } ] }, options: { ...commonOptions, title: { display: true, text: '환경' }, scales: { yAxes: [ { id: 'y_temp', type: 'linear', position: 'left', ticks: { fontColor: '#ff6384', suggestedMin: 0, suggestedMax: 50 } }, { id: 'y_hum', type: 'linear', position: 'right', ticks: { fontColor: '#36a2eb', suggestedMin: 0, suggestedMax: 100 }, gridLines: { drawOnChartArea: false } }, { id: 'y_co2', type: 'linear', position: 'right', ticks: { fontColor: '#4bc0c0', suggestedMin: 0, suggestedMax: 5000 }, gridLines: { drawOnChartArea: false } }, { id: 'y_W/m^2', type: 'linear', position: 'left', ticks: { fontColor: '#ffce56', suggestedMin: 0, suggestedMax: 60000 }, gridLines: { drawOnChartArea: false }, offset: true } ] } } });
         charts.water = createChart('waterChart', { type: 'line', data: { labels: [], datasets: [ { label: 'pH', data: [], borderColor: '#ff9f40', yAxisID: 'y_ph', fill: false }, { label: 'EC (uS/cm)', data: [], borderColor: '#c9cbcf', yAxisID: 'y_ec', fill: false }, { label: '수온 (°C)', data: [], borderColor: '#33A5FF', yAxisID: 'y_wtemp', fill: false } ] }, options: { ...commonOptions, title: { display: true, text: '배액' }, scales: { yAxes: [ { id: 'y_ph', type: 'linear', position: 'left', ticks: { fontColor: '#ff9f40', suggestedMin: 0, suggestedMax: 14 } }, { id: 'y_ec', type: 'linear', position: 'right', ticks: { fontColor: '#c9cbcf', suggestedMin: 0, suggestedMax: 2500 }, gridLines: { drawOnChartArea: false } }, { id: 'y_wtemp', type: 'linear', position: 'left', offset: true, ticks: { fontColor: '#33A5FF', suggestedMin: 0, suggestedMax: 50 }, gridLines: { drawOnChartArea: false } } ] } } });
         charts.soil = createChart('soilChart', { type: 'line', data: { labels: [], datasets: [ { label: '토양 온도 (°C)', data: [], borderColor: '#D9534F', yAxisID: 'y_soil_temp', fill: false }, { label: '토양 습도 (%)', data: [], borderColor: '#5CB85C', yAxisID: 'y_soil_hum', fill: false }, { label: '토양 EC (uS/cm)', data: [], borderColor: '#333', yAxisID: 'y_soil_ec', fill: false }, { label: '토양 pH', data: [], borderColor: '#F0AD4E', yAxisID: 'y_soil_ph', fill: false } ] }, options: { ...commonOptions, title: { display: true, text: '토양' }, scales: { yAxes: [ { id: 'y_soil_temp', type: 'linear', position: 'left', ticks: { fontColor: '#D9534F', suggestedMin: 0, suggestedMax: 50 } }, { id: 'y_soil_hum', type: 'linear', position: 'right', ticks: { fontColor: '#5CB85C', suggestedMin: 0, suggestedMax: 100 }, gridLines: { drawOnChartArea: false } }, { id: 'y_soil_ec', type: 'linear', position: 'right', ticks: { fontColor: '#333', suggestedMin: 0, suggestedMax: 2500 }, gridLines: { drawOnChartArea: false } }, { id: 'y_soil_ph', type: 'linear', position: 'left', ticks: { fontColor: '#F0AD4E', suggestedMin: 0, suggestedMax: 14 }, gridLines: { drawOnChartArea: false }, offset: true } ] } } });
@@ -446,6 +461,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 water: { chart: charts.water, datasets: [data.datasets.ph, data.datasets.ec, data.datasets.water_temperature] },
                 soil: { chart: charts.soil, datasets: [data.datasets.soil_temperature, data.datasets.soil_humidity, data.datasets.soil_conductivity, data.datasets.soil_ph] }
             };
+
+            // update time scale change
+            let timeConfig = {};
+            
+            // for 10 min, 1hr = 1 min scale
+            if (selectedOption === '10m' || selectedOption === '1h') {
+                timeConfig = {
+                    unit: 'minute', // 1분 단위
+                    // stepSize: 1, // 1분 단위로 강제 (필요시)
+                    displayFormats: {
+                        minute: 'HH:mm'
+                    }
+                };
+            }
+            // for 24 hrs = 3 hr scale
+            else if (selectedOption === '24h') {
+                timeConfig = {
+                    unit: 'hour',
+                    stepSize: 3, // 3시간 단위
+                    displayFormats: {
+                        hour: 'MM/DD HH:mm'
+                    }
+                };
+            }
+            // for 7 days, custom = 6 hr scale
+            else if (selectedOption === '7d' || selectedOption === 'custom') {
+                timeConfig = {
+                    unit: 'hour',
+                    stepSize: 6, // 6시간 단위
+                    displayFormats: {
+                        hour: 'MM/DD' // 7일 이상은 날짜만
+                    }
+                };
+            }
+            
             for (const key in map) {
                 if(map[key].chart) {
                     map[key].chart.data.labels = data.labels;
@@ -454,6 +504,12 @@ document.addEventListener('DOMContentLoaded', () => {
                              map[key].chart.data.datasets[i].data = ds || []; 
                          }
                     });
+
+                    map[key].chart.options.scales.xAxes[0].time = {
+                        ...map[key].chart.options.scales.xAxes[0].time,
+                        ...timeConfig
+                    };
+                    
                     map[key].chart.update();
                 }
             }
