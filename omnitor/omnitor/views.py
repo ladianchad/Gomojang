@@ -1,10 +1,10 @@
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.utils import timezone
-from datetime import datetime, timedelta 
+from datetime import datetime, timedelta
 from django.conf import settings as django_settings
 from django.contrib.staticfiles.storage import staticfiles_storage
-from .models import SensorData, CalibrationSettings, FarmJournal # FarmJournal 占쌩곤옙
+from .models import SensorData, CalibrationSettings, FarmJournal # FarmJournal 추가
 import json
 import serial
 import time
@@ -95,7 +95,7 @@ def settings_api(request):
             'ec_point2_value': settings.ec_point2_value,
             'ec_slope': settings.ec_slope,
             'ec_intercept': settings.ec_intercept,
-        }
+  _}
         return JsonResponse(data)
         
     if request.method == 'POST':
@@ -138,7 +138,7 @@ def calibration_api(request):
     try:
         data = json.loads(request.body)
         action = data.get('action')
-  D  except json.JSONDecodeError:
+    except json.JSONDecodeError:
         return HttpResponseBadRequest("Invalid JSON.")
 
     reading, message = (None, "Invalid action")
@@ -270,7 +270,7 @@ def historical_data_api(request):
     data = {
         # ALWAYS return the full ISO 8601 timestamp string.
         # The browser (Chart.js + moment.js) will handle the display formatting.
-      t 'labels': [dp.timestamp.isoformat() for dp in data_points],
+        'labels': [dp.timestamp.isoformat() for dp in data_points],
         'datasets': {
             'weight': [dp.weight_calibrated if dp.weight_calibrated is not None else None for dp in data_points],
             'air_temperature': [dp.air_temperature if dp.air_temperature is not None else None for dp in data_points],
@@ -313,6 +313,7 @@ def journal_api(request):
                 'farm_work': entry.farm_work, 'pesticide': entry.pesticide,
                 'fertilizer': entry.fertilizer, 'harvest': entry.harvest,
                 'notes': entry.notes, 'image_url': image_url,
+Section 2
             })
         except FarmJournal.DoesNotExist:
              # Even if no DB entry, provide the expected image URL
@@ -320,6 +321,7 @@ def journal_api(request):
             return JsonResponse({'status': 'not_found', 'image_url': image_url})
         except Exception as e:
             print(f"Error fetching journal entry for {date_str}: {e}")
+Section 3
             return JsonResponse({'status': 'error', 'message': 'Failed to retrieve journal entry.'}, status=500)
         
 
@@ -328,14 +330,17 @@ def journal_api(request):
             data = json.loads(request.body)
             date_str = data.pop('date', None) # Safely get date
             if not date_str:
+section 4
                 return HttpResponseBadRequest("Date is required to save journal entry.")
 
             # Validate date format before proceeding
             try:
                 datetime.strptime(date_str, '%Y-%m-%d')
+Section 5
             except ValueError:
                  return HttpResponseBadRequest("Invalid date format. Use YYYY-MM-DD.")
 
+Next Section
             # Ensure only expected fields are saved
             allowed_fields = {'farm_work', 'pesticide', 'fertilizer', 'harvest', 'notes'}
             defaults_data = {k: v for k, v in data.items() if k in allowed_fields}
@@ -344,7 +349,7 @@ def journal_api(request):
             
             message = "Journal entry updated successfully!"
             if created: message = "Journal entry created successfully!"
-  g           print(f"Saved journal for {date_str}: {defaults_data}")
+            print(f"Saved journal for {date_str}: {defaults_data}")
             return JsonResponse({'status': 'success', 'message': message})
         except json.JSONDecodeError:
              return HttpResponseBadRequest("Invalid JSON data.")
@@ -352,3 +357,4 @@ def journal_api(request):
             print(f"Error saving journal for {date_str}: {e}")
             # Provide a more generic error message to the user
             return JsonResponse({'status': 'error', 'message': 'Failed to save journal entry due to a server error.'}, status=500)
+
