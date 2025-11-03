@@ -85,19 +85,19 @@
     
     <div class="tab-nav">
         <button class="tab-button active" data-tab="realtime">
-            <img src="{% static 'omnitor/images/dashboard.png' %}" alt="대시보드">
+            <img src="{% static 'images/dashboard.png' %}" alt="대시보드">
             대시보드
         </button>
         <button class="tab-button" data-tab="graphs">
-            <img src="{% static 'omnitor/images/graph.png' %}" alt="Graphs">
+            <img src="{% static 'images/graph.png' %}" alt="Graphs">
             그래프
         </button>
         <button class="tab-button" data-tab="journal">
-            <img src="{% static 'omnitor/images/journal.png' %}" alt="Journal">
+            <img src="{% static 'images/journal.png' %}" alt="Journal">
             농장 일지
         </button>
         <button class="tab-button" data-tab="calibration">
-            <img src="{% static 'omnitor/images/calibrate.png' %}" alt="Calibration">
+            <img src="{% static 'images/calibrate.png' %}" alt="Calibration">
             보정 설정
         </button>
     </div>
@@ -190,8 +190,33 @@
         <div class="calibration-section">
             <div class="calibration-box">
                 <h2>무게 보정</h2>
-                <p><strong>Offset:</strong> <span id="current-offset">...</span></p>
-                <p><strong>Scale:</strong> <span id="current-scale">...</span></p>
+                <p><strong>ㅇ            <div class="journal-form">
+                <h3>일지 수정</h3>
+                <form id="journal-entry-form">
+                    <input type="hidden" id="form-date">
+                    <label for="farm_work">1. 농작업:</label>
+                    <textarea id="farm_work" name="farm_work"></textarea><br><br>
+                    <label for="pesticide">2. 농약:</label>
+                    <textarea id="pesticide" name="pesticide"></textarea><br><br>
+                    <label for="fertilizer">3. 비료:</label>
+                    <textarea id="fertilizer" name="fertilizer"></textarea><br><br>
+                    <label for="harvest">4. 수확:</label>
+                    <textarea id="harvest" name="harvest"></textarea><br><br>
+                    <label for="notes">5. 특이사항:</label>
+                    <textarea id="notes" name="notes"></textarea><br><br>
+                    <button type="button" id="save-journal-btn">일지 저장</button>
+                    <div id="journal-status" class="status-message"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="calibration" class="tab-content">
+        <div class="calibration-section">
+            <div class="calibration-box">
+                <h2>무게 보정</h2>
+                <p><strong>영점:</strong> <span id="current-offset">...</span></p>
+                <p><strong>보정 계수:</strong> <span id="current-scale">...</span></p>
                 <hr>
                 <p><strong>1단계: 영점</strong><br>아무것도 올리지 마시고 '영점' 버튼을 눌러 주세요.</p>
                 <button id="tare-btn">영점 (0)</button>
@@ -206,14 +231,14 @@
                 <p><strong>Slope:</strong> <span id="current-ph-slope">...</span></p>
                 <p><strong>Intercept:</strong> <span id="current-ph-intercept">...</span></p>
                 <hr>
-                <p><strong>Point 1 (25°C일 때의 보정액의 pH 값을 입력 하세요)</strong></p>
+                <p><strong>점 1 (25°C일 때의 보정액의 pH 값을 입력 하세요)</strong></p>
                 <input type="number" step="0.1" id="ph-val-1" value="7.0">
-                <button id="ph-cal-btn-1">Read Sensor Value</button>
+                <button id="ph-cal-btn-1">입력</button>
                 <p><em>Value 1: <span id="ph-volt-1">...</span></em></p>
                 <br>
-                <p><strong>Point 2 (25°C일 때의 보정액의 pH 값을 입력 하세요)</strong></p>
+                <p><strong>점 2 (25°C일 때의 보정액의 pH 값을 입력 하세요)</strong></p>
                 <input type="number" step="0.1" id="ph-val-2" value="4.0">
-                <button id="ph-cal-btn-2">Read Sensor Value</button>
+                <button id="ph-cal-btn-2">입력</button>
                 <p><em>Value 2: <span id="ph-volt-2">...</span></em></p>
                 <div id="ph-status" class="status-message"></div>
             </div>
@@ -222,20 +247,20 @@
                 <p><strong>Slope:</strong> <span id="current-ec-slope">...</span></p>
                 <p><strong>Intercept:</strong> <span id="current-ec-intercept">...</span></p>
                 <hr>
-                <p><strong>Point 1 (e.g., 700 uS/cm)</strong></p>
+                <p><strong>점 1 (예. 700 uS/cm)</strong></p>
                 <input type="number" id="ec-val-1" value="700">
-                <button id="ec-cal-btn-1">Read Sensor Value</button>
+                <button id="ec-cal-btn-1">입력</button>
                 <p><em>Value 1: <span id="ec-volt-1">...</span></em></p>
                 <br>
-                <p><strong>Point 2 (e.g., 1500 uS/cm)</strong></p>
+                <p><strong>점 2 (예. 1500 uS/cm)</strong></p>
                 <input type="number" id="ec-val-2" value="1500">
-                <button id="ec-cal-btn-2">Read Sensor Value</button>
+                <button id="ec-cal-btn-2">입력</button>
                 <p><em>Value 2: <span id="ec-volt-2">...</span></em></p>
                 <div id="ec-status" class="status-message"></div>
             </div>
         </div>
          <div style="text-align:center; margin-top: 30px;">
-            <button id="save-settings-btn">Save All Calibration Settings (Important!)</button>
+            <button id="save-settings-btn">보정 저장 (중요!)</button>
             <div id="save-status" class="status-message" style="margin: 15px auto 0; max-width: 500px;"></div>
         </div>
     </div>
@@ -243,7 +268,7 @@
 
 <footer class="page-footer">
     <div class="footer-left">
-        <img src="{% static 'omnitor/images/logo.png' %}" alt="omnitor Logo">
+        <img src="{% static 'images/logo.png' %}" alt="omnitor Logo">
         <div class="footer-text">
             <p><strong>Metafarmers</strong></p>
             <p>what began with farmers;</p>
