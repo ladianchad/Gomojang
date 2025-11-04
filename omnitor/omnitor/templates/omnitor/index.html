@@ -186,30 +186,7 @@
         </div>
     </div>
 
-    <div id="calibration" class="tab-content">
-        <div class="calibration-section">
-            <div class="calibration-box">
-                <h2>무게 보정</h2>
-                <p><strong>ㅇ            <div class="journal-form">
-                <h3>일지 수정</h3>
-                <form id="journal-entry-form">
-                    <input type="hidden" id="form-date">
-                    <label for="farm_work">1. 농작업:</label>
-                    <textarea id="farm_work" name="farm_work"></textarea><br><br>
-                    <label for="pesticide">2. 농약:</label>
-                    <textarea id="pesticide" name="pesticide"></textarea><br><br>
-                    <label for="fertilizer">3. 비료:</label>
-                    <textarea id="fertilizer" name="fertilizer"></textarea><br><br>
-                    <label for="harvest">4. 수확:</label>
-                    <textarea id="harvest" name="harvest"></textarea><br><br>
-                    <label for="notes">5. 특이사항:</label>
-                    <textarea id="notes" name="notes"></textarea><br><br>
-                    <button type="button" id="save-journal-btn">일지 저장</button>
-                    <div id="journal-status" class="status-message"></div>
-                </form>
-            </div>
-        </div>
-    </div>
+
 
     <div id="calibration" class="tab-content">
         <div class="calibration-section">
@@ -228,8 +205,8 @@
             </div>
             <div class="calibration-box">
                 <h2>pH 보정</h2>
-                <p><strong>Slope:</strong> <span id="current-ph-slope">...</span></p>
-                <p><strong>Intercept:</strong> <span id="current-ph-intercept">...</span></p>
+                <p><strong>영점:</strong> <span id="current-ph-intercept">...</span></p>
+                <p><strong>보정 계수:</strong> <span id="current-ph-slope">...</span></p>
                 <hr>
                 <p><strong>점 1 (25°C일 때의 보정액의 pH 값을 입력 하세요)</strong></p>
                 <input type="number" step="0.1" id="ph-val-1" value="7.0">
@@ -243,9 +220,9 @@
                 <div id="ph-status" class="status-message"></div>
             </div>
             <div class="calibration-box">
-                <h2>EC Sensor</h2>
-                <p><strong>Slope:</strong> <span id="current-ec-slope">...</span></p>
-                <p><strong>Intercept:</strong> <span id="current-ec-intercept">...</span></p>
+                <h2>EC 보정</h2>
+                <p><strong>영점:</strong> <span id="current-ec-intercept">...</span></p>
+                <p><strong>보정 계수:</strong> <span id="current-ec-slope">...</span></p>
                 <hr>
                 <p><strong>점 1 (예. 700 uS/cm)</strong></p>
                 <input type="number" id="ec-val-1" value="700">
