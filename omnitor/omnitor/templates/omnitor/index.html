@@ -60,7 +60,6 @@
         }
         .progress-fg {
             fill: transparent;
-            /* stroke: #007bff; /* Default progress color */
             stroke-width: 20;
             stroke-linecap: round; /* Gives it a nice rounded edge */
             transition: stroke-dashoffset 0.3s ease;
@@ -84,12 +83,12 @@
             transform-origin: 91px 120px; 
 
             font-size: 25px;
-            fill: #777;
+            fill: #7a7a7a;
 
             text-anchor: middle;
             dominant-baseline: middle;
         }
-        .data-card { background-color: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .data-card { background-color: #f5f5f5; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.2s; }
         .data-card:hover { transform: translateY(-5px); }
         .data-card .label { font-size: 1rem; color: #555; margin-bottom: 10px; }
         /*.data-card .value { font-size: 2.2rem; font-weight: bold; color: #1a2b4d; }
@@ -218,8 +217,7 @@
                 <div class="progress-circle-container">
                     <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
                         <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
-                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-water_temperature" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C
-"></circle>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-water_temperature" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
                         <text class="progress-text" x="91" y="86" id="text-water_temperature">-</text>
                         <text class="progress-unit" x="66" y="160">°C</text>
                     </svg>
