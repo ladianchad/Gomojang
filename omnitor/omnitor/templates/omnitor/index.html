@@ -228,6 +228,7 @@
                 <div class="progress-circle-container">
                     <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
                         <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
+                        <circle id="inner-air_temperature" r="71" cx="91" cy="91" fill="#F3E5FF"></circle>
                         <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-ph_calibrated" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
                         <text class="progress-text" x="91" y="86" id="text-ph_calibrated">-</text>
                         <text class="progress-unit" x="66" y="160">pH</text>
@@ -800,7 +801,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // --- (데이터 변환 함수) ---
             // 서버에서 받은 labels 배열과 value 배열을 [{x, y}] 형식으로 변환
             const transformData = (labels, values) => {
                 if (!values || !Array.isArray(values)) {
@@ -826,17 +826,14 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (selectedOption === '24h') {
                 timeConfig = { unit: 'hour', stepSize: 3, displayFormats: { hour: 'MM/DD HH:mm' } };
             } else if (selectedOption === '7d' || selectedOption === 'custom') {
-                timeConfig = { unit: 'hour', stepSize: 6, displayFormats: { hour: 'MM/DD' } };
+                timeConfig = { unit: 'hour', stepSize: 6, displayFormats: { hour: 'MM/DD HH:mm' } };
             }
             
             for (const key in map) {
                 if(map[key].chart) {
                     
-                    // --- 여기가 핵심적인 변경 ---
-                    // 1. data.labels를 차트에 직접 할당하지 않습니다. (삭제)
-                    // map[key].chart.data.labels = data.labels; // (이전 코드 삭제)
 
-                    // 2. 각 데이터셋의 데이터를 {x, y} 형식으로 변환하여 할당합니다.
+                    // 각 데이터셋의 데이터를 {x, y} 형식으로 변환하여 할당
                     map[key].datasets.forEach((datasetValues, i) => {
                         if (map[key].chart.data.datasets[i]) {
                             // transformData 함수로 데이터 형식 변환
@@ -844,7 +841,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
                     
-                    // 3. x축 시간 설정을 적용합니다.
+                    // x축 시간 설정을 적용합
                     map[key].chart.options.scales.xAxes[0].time = {
                         ...map[key].chart.options.scales.xAxes[0].time,
                         ...timeConfig
