@@ -68,26 +68,32 @@
         }
         /* This counter-rotates the text to be upright */
         .progress-text {
-            transform: rotate(90deg) translate(0px, -4px); /* Adjust positioning */
-            font-size: 45px;
+            transform: rotate(90deg);
+            transform-origin: 91px 91px;
+            
+            font-size: 40px;
             font-weight: bold;
-            fill: #1a2b4d; /* Match original .value color */
+            fill: #000000;
+            
             text-anchor: middle;
-            dominant-baseline: middle; /* Vertical centering */
+            dominant-baseline: middle;
         }
         /* This counter-rotates the unit text */
         .progress-unit {
-            transform: rotate(90deg) translate(0px, -4px); /* Adjust positioning */
-            font-size: 20px;
-            fill: #777; /* Match original .unit color */
+            transform: rotate(90deg);
+            transform-origin: 91px 120px; 
+
+            font-size: 25px;
+            fill: #777;
+
             text-anchor: middle;
-            dominant-baseline: middle; /* Sits below the main value */
+            dominant-baseline: middle;
         }
         .data-card { background-color: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.2s; }
         .data-card:hover { transform: translateY(-5px); }
         .data-card .label { font-size: 1rem; color: #555; margin-bottom: 10px; }
-        .data-card .value { font-size: 2.2rem; font-weight: bold; color: #1a2b4d; }
-        .data-card .unit { font-size: 1rem; color: #777; margin-left: 5px; }
+        /*.data-card .value { font-size: 2.2rem; font-weight: bold; color: #1a2b4d; }
+        .data-card .unit { font-size: 1rem; color: #777; margin-left: 5px; } */
         .chart-container { position: relative; height: 40vh; width: 100%; margin-top: 20px; }
         .calibration-section { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
         .calibration-box { padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #fdfdfd;}
@@ -151,44 +157,44 @@
             <div class="data-card">
                 <div class="label">온도</div>
                 <div class="progress-circle-container">
-                    <svg width="130" height="130" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
                         <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
-                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-air_temperature" stroke-dasharray="509" stroke-dashoffset="509" stroke="#ff6384"></circle>
-                        <text class="progress-text" x="91" y="91" id="text-air_temperature">-</text>
-                        <text class="progress-unit" x="91" y="120">°C</text>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-air_temperature" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-air_temperature">-</text>
+                        <text class="progress-unit" x="66" y="160">°C</text>
                     </svg>
                 </div>
             </div>
             <div class="data-card">
                 <div class="label">습도</div>
                 <div class="progress-circle-container">
-                    <svg width="130" height="130" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
                         <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
-                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-air_humidity" stroke-dasharray="509" stroke-dashoffset="509" stroke="#36a2eb"></circle>
-                        <text class="progress-text" x="91" y="91" id="text-air_humidity">-</text>
-                        <text class="progress-unit" x="91" y="120">%</text>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-air_humidity" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-air_humidity">-</text>
+                        <text class="progress-unit" x="66" y="160">%</text>
                     </svg>
                 </div>
             </div>
             <div class="data-card">
                 <div class="label">이산화탄소</div>
                 <div class="progress-circle-container">
-                    <svg width="130" height="130" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
                         <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
-                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-co2" stroke-dasharray="509" stroke-dashoffset="509" stroke="#4bc0c0"></circle>
-                        <text class="progress-text" x="91" y="91" id="text-co2">-</text>
-                        <text class="progress-unit" x="91" y="120">ppm</text>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-co2" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-co2">-</text>
+                        <text class="progress-unit" x="66" y="160">ppm</text>
                     </svg>
                 </div>
             </div>
             <div class="data-card">
                 <div class="label">일사량</div>
                 <div class="progress-circle-container">
-                    <svg width="130" height="130" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
                         <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
-                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-insolation" stroke-dasharray="509" stroke-dashoffset="509" stroke="#ffce56"></circle>
-                        <text class="progress-text" x="91" y="91" id="text-insolation">-</text>
-                        <text class="progress-unit" x="91" y="120" font-size="18px">W/m²</text>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-insolation" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-insolation">-</text>
+                        <text class="progress-unit" x="66" y="160" font-size="18px">W/m²</text>
                     </svg>
                 </div>
             </div>
@@ -199,44 +205,45 @@
             <div class="data-card">
                 <div class="label">무게</div>
                 <div class="progress-circle-container">
-                    <svg width="130" height="130" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
                         <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
-                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-weight_calibrated" stroke-dasharray="509" stroke-dashoffset="509" stroke="#8e5ea2"></circle>
-                        <text class="progress-text" x="91" y="91" id="text-weight_calibrated">-</text>
-                        <text class="progress-unit" x="91" y="120">g</text>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-weight_calibrated" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-weight_calibrated">-</text>
+                        <text class="progress-unit" x="66" y="160">g</text>
                     </svg>
                 </div>
             </div>
             <div class="data-card">
                 <div class="label">수온</div>
                 <div class="progress-circle-container">
-                    <svg width="130" height="130" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
                         <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
-                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-water_temperature" stroke-dasharray="509" stroke-dashoffset="509" stroke="#33A5FF"></circle>
-                        <text class="progress-text" x="91" y="91" id="text-water_temperature">-</text>
-                        <text class="progress-unit" x="91" y="120">°C</text>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-water_temperature" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C
+"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-water_temperature">-</text>
+                        <text class="progress-unit" x="66" y="160">°C</text>
                     </svg>
                 </div>
             </div>
             <div class="data-card">
                 <div class="label">pH</div>
                 <div class="progress-circle-container">
-                    <svg width="130" height="130" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
                         <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
-                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-ph_calibrated" stroke-dasharray="509" stroke-dashoffset="509" stroke="#ff9f40"></circle>
-                        <text class="progress-text" x="91" y="91" id="text-ph_calibrated">-</text>
-                        <text class="progress-unit" x="91" y="120"></text>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-ph_calibrated" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-ph_calibrated">-</text>
+                        <text class="progress-unit" x="66" y="160">pH</text>
                     </svg>
                 </div>
             </div>
             <div class="data-card">
                 <div class="label">EC</div>
                 <div class="progress-circle-container">
-                    <svg width="130" height="130" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
                         <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
-                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-ec_calibrated" stroke-dasharray="509" stroke-dashoffset="509" stroke="#c9cbcf"></circle>
-                        <text class="progress-text" x="91" y="91" id="text-ec_calibrated">-</text>
-                        <text class="progress-unit" x="91" y="120" font-size="18px">uS/cm</text>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-ec_calibrated" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-ec_calibrated">-</text>
+                        <text class="progress-unit" x="66" y="160" font-size="18px">uS/cm</text>
                     </svg>
                 </div>
             </div>
@@ -247,44 +254,44 @@
             <div class="data-card">
                 <div class="label">토양 온도</div>
                 <div class="progress-circle-container">
-                    <svg width="130" height="130" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
                         <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
-                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-soil_temperature" stroke-dasharray="509" stroke-dashoffset="509" stroke="#D9534F"></circle>
-                        <text class="progress-text" x="91" y="91" id="text-soil_temperature">-</text>
-                        <text class="progress-unit" x="91" y="120">°C</text>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-soil_temperature" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-soil_temperature">-</text>
+                        <text class="progress-unit" x="66" y="160">°C</text>
                     </svg>
                 </div>
             </div>
             <div class="data-card">
                 <div class="label">토양 습도</div>
                 <div class="progress-circle-container">
-                    <svg width="130" height="130" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
                         <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
-                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-soil_humidity" stroke-dasharray="509" stroke-dashoffset="509" stroke="#5CB85C"></circle>
-                        <text class="progress-text" x="91" y="91" id="text-soil_humidity">-</text>
-                        <text class="progress-unit" x="91" y="120">%</text>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-soil_humidity" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-soil_humidity">-</text>
+                        <text class="progress-unit" x="66" y="160">%</text>
                     </svg>
                 </div>
             </div>
             <div class="data-card">
                 <div class="label">토양 EC</div>
                 <div class="progress-circle-container">
-                    <svg width="130" height="130" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
                         <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
-                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-soil_conductivity" stroke-dasharray="509" stroke-dashoffset="509" stroke="#333"></circle>
-                        <text class="progress-text" x="91" y="91" id="text-soil_conductivity">-</text>
-                        <text class="progress-unit" x="91" y="120" font-size="18px">uS/cm</text>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-soil_conductivity" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-soil_conductivity">-</text>
+                        <text class="progress-unit" x="66" y="160" font-size="18px">uS/cm</text>
                     </svg>
                 </div>
             </div>
             <div class="data-card">
                 <div class="label">토양 pH</div>
                 <div class="progress-circle-container">
-                    <svg width="130" height="130" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
                         <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
-                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-soil_ph" stroke-dasharray="509" stroke-dashoffset="509" stroke="#F0AD4E"></circle>
-                        <text class="progress-text" x="91" y="91" id="text-soil_ph">-</text>
-                        <text class="progress-unit" x="91" y="120"></text>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-soil_ph" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-soil_ph">-</text>
+                        <text class="progress-unit" x="66" y="160">pH</text>
                     </svg>
                 </div>
             </div>
@@ -489,7 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Tab 1: 실시간 Data ---
 
-    function updateProgressCircle(field, value, min, max) {
+    function updateProgressCircle(field, value, min, max, defaultColor) {
         const textEl = document.getElementById(`text-${field}`);
         const barEl = document.getElementById(`bar-${field}`);
 
@@ -502,7 +509,32 @@ document.addEventListener('DOMContentLoaded', () => {
         let percentage = 0; // Default to 0% (empty)
         const circumference = 509; // 2 * PI * 81
 
+        let strokeColor = defaultColor;
+
+
         if (typeof value === 'number' && !isNaN(value)) {
+            // change color for pH dashboard
+            if (field === 'ph_calibrated') {
+                if ((value >= 0 && value < 5.0) || (value > 7.0 && value <= 14)) {
+                    strokeColor = '#FF4F4F'; // red
+                } else if ((value >= 5.0 && value < 5.5) || (value > 6.5 && value <= 7.0)) {
+                    strokeColor = '#FFE54F'; // yellow
+                } else if (value >= 5.5 && value <= 6.5) {
+                    strokeColor = '#73E866'; // green
+                }
+            }
+
+            // change color for air humidity
+            else if (field === 'air_humidity') {
+                if ((value >= 0 && value < 40) || (value > 90 && value <= 100)) {
+                    strokeColor = '#FF4F4F'; // red
+                } else if ((value >= 40 && value < 60) || (value > 80 && value <= 90)) {
+                    strokeColor = '#FFE54F'; // yellow
+                } else if (value >= 60 && value <= 80) {
+                    strokeColor = '#73E866'; // green
+                }
+            }
+
             // Clamp value between min and max to avoid over/underflow
             const clampedValue = Math.max(min, Math.min(value, max));
             
@@ -521,15 +553,18 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 displayValue = value.toFixed(1);
             }
+
         }
 
         // Calculate the dash offset
         // 100% full = offset 0
         // 0% full = offset 509 (circumference)
         const offset = (1 - percentage) * circumference;
-
         textEl.textContent = displayValue;
+        
+    
         barEl.style.strokeDashoffset = offset;
+        barEl.style.stroke = strokeColor;    
     }
 
 
@@ -545,25 +580,25 @@ document.addEventListener('DOMContentLoaded', () => {
             // --- Define Min/Max ranges for your progress bars ---
             // !!! You should adjust these values to fit your farm !!!
             const sensorConfig = {
-                'air_temperature': { min: -20, max: 80 },
-                'air_humidity': { min: 0, max: 100 },
-                'co2': { min: 0, max: 5000 },
-                'insolation': { min: 0, max: 1300 },
-                'weight_calibrated': { min: 0, max: 80000 }, // Guessing 5kg max
-                'water_temperature': { min: -20, max: 80 },
-                'ph_calibrated': { min: 0, max: 14 },
-                'ec_calibrated': { min: 0, max: 5000 },
-                'soil_temperature': { min: -20, max: 80 },
-                'soil_humidity': { min: 0, max: 100 },
-                'soil_conductivity': { min: 0, max: 5000 },
-                'soil_ph': { min: 0, max: 14 }
+                'air_temperature': { min: -20, max: 80, defaultColor: '#73E866' },
+                'air_humidity': { min: 0, max: 100, defaultColor: '#73E866' },
+                'co2': { min: 0, max: 5000, defaultColor: '#73E866' },
+                'insolation': { min: 0, max: 1300, defaultColor: '#73E866' },
+                'weight_calibrated': { min: 0, max: 80000, defaultColor: '#73E866' },
+                'water_temperature': { min: -20, max: 80, defaultColor: '#73E866' },
+                'ph_calibrated': { min: 0, max: 14, defaultColor: '#73E866' },
+                'ec_calibrated': { min: 0, max: 5000, defaultColor: '#73E866' },
+                'soil_temperature': { min: -20, max: 80, defaultColor: '#73E866' },
+                'soil_humidity': { min: 0, max: 100, defaultColor: '#73E866' },
+                'soil_conductivity': { min: 0, max: 5000, defaultColor: '#73E866' },
+                'soil_ph': { min: 0, max: 14, defaultColor: '#73E866' }
             };
 
             // Loop through the config and update each circle
             for (const field in sensorConfig) {
                 const config = sensorConfig[field];
                 const value = data[field];
-                updateProgressCircle(field, value, config.min, config.max);
+                updateProgressCircle(field, value, config.min, config.max, config.defaultColor);
             }
 
         } catch (error) {
