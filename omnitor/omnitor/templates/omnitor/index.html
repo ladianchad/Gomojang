@@ -324,7 +324,7 @@
                 <label for="date-range-picker">Select Date:</label>
                 <input type="text" id="date-range-picker" class="date-range-picker" placeholder="Select date range...">
             </div>
-            <button id="refresh-graphs-btn" style="margin-left: 10px;">Load Data</button>
+            <button id="refresh-graphs-btn" style="margin-left: 10px;">데이터 가져오기</button>
              <span id="graph-status" class="status-message" style="margin-left: 15px;"></span> 
         </div>
         <div class="chart-container"><canvas id="weightChart"></canvas></div>
@@ -923,7 +923,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 form.fertilizer.value = data.fertilizer || ''; 
                 form.harvest.value = data.harvest || ''; 
                 form.notes.value = data.notes || '';
-                displayDiv.innerHTML = `<h4>1. Farm Work:</h4><p>${data.farm_work||'None'}</p><h4>2. Pesticide:</h4><p>${data.pesticide||'None'}</p><h4>3. Fertilizer:</h4><p>${data.fertilizer||'None'}</p><h4>4. Harvest:</h4><p>${data.harvest||'None'}</p><h4>5. Notes:</h4><p>${data.notes||'None'}</p>`;
+                displayDiv.innerHTML = `<h4>1. 농작업:</h4><p>${data.farm_work||'None'}</p><h4>2. 농약:</h4><p>${data.pesticide||'None'}</p><h4>3. 비료:</h4><p>${data.fertilizer||'None'}</p><h4>4. 수확:</h4><p>${data.harvest||'None'}</p><h4>5. 특이사항:</h4><p>${data.notes||'None'}</p>`;
             } 
             else {
                 form.reset();
