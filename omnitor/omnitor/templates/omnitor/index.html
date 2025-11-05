@@ -139,7 +139,7 @@
             그래프
         </button>
         <button class="tab-button" data-tab="journal">
-            <img src="{% static 'journal_images/journal.png' %}" alt="Journal">
+            <img src="{% static 'images/journal.png' %}" alt="Journal">
             농장 일지
         </button>
         <button class="tab-button" data-tab="calibration">
@@ -339,12 +339,12 @@
                 <input type="text" id="journal-calendar" style="display:none;">
             </div>
             <div class="journal-display">
-                <h3><span id="display-date">오늘</span>의 일</h3>
+                <h3><span id="display-date">오늘</span>의 일지</h3>
                 <div id="journal-content-display">
-                    <p>Please select a date from the calendar.</p>
+                    <p>달력에서 날짜를 선택해 주세요.</p>
                 </div>
                 <img id="journal-image" src="https://placehold.co/600x400/eee/ccc?text=Image" alt="Journal Image">
-                <a id="download-image-link" href="#" class="download-btn" style="display: none;" download>Download Image</a>
+                <a id="download-image-link" href="#" class="download-btn" style="display: none;" download>이미지 저장하기</a>
             </div>
             <div class="journal-form">
                 <h3>일지 수정</h3>
@@ -900,14 +900,23 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('display-date').textContent = date;
         document.getElementById('form-date').value = date;
         const [displayDiv, imageEl, form, downloadLink] = [document.getElementById('journal-content-display'), document.getElementById('journal-image'), document.getElementById('journal-entry-form'), document.getElementById('download-image-link')];
+        const imageExtension = '.jpg';
+        const imageUrl = `/static/journal_images/${date}${imageExtension}`;
+
         try {
             const response = await fetchWithTimeout(`/journal_api/?date=${date}`);
             const data = await response.json();
-            imageEl.src = data.image_url + '?' + new Date().getTime();
-            downloadLink.href = data.image_url;
-            downloadLink.download = `omnitor-journal-${date}.jpg`;
-            imageEl.onerror = () => { imageEl.src = 'https://placehold.co/600x400/eee/ccc?text=No+Image'; downloadLink.style.display = 'none'; };
-            imageEl.onload = () => { downloadLink.style.display = imageEl.src.includes('placehold.co') ? 'none' : 'inline-block'; };
+
+            imageEl.src = imageUrl + '?' + new Date().getTime();
+            downloadLink.href = image_url;
+            downloadLink.download = `omnitor-journal-${date}${imageExtension}`;
+            imageEl.onerror = () => { 
+                imageEl.src = 'https://placehold.co/600x400/eee/ccc?text=No+Image'; 
+                downloadLink.style.display = 'none'; 
+            };
+            imageEl.onload = () => { 
+                downloadLink.style.display = imageEl.src.includes('placehold.co') ? 'none' : 'inline-block'; 
+            };
             if (data.status === 'found') {
                 form.farm_work.value = data.farm_work || ''; form.pesticide.value = data.pesticide || ''; form.fertilizer.value = data.fertilizer || ''; form.harvest.value = data.harvest || ''; form.notes.value = data.notes || '';
                 displayDiv.innerHTML = `<h4>1. Farm Work:</h4><p>${data.farm_work||'None'}</p><h4>2. Pesticide:</h4><p>${data.pesticide||'None'}</p><h4>3. Fertilizer:</h4><p>${data.fertilizer||'None'}</p><h4>4. Harvest:</h4><p>${data.harvest||'None'}</p><h4>5. Notes:</h4><p>${data.notes||'None'}</p>`;
