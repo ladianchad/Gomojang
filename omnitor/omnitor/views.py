@@ -4,7 +4,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from django.conf import settings as django_settings
 from django.contrib.staticfiles.storage import staticfiles_storage
-from .models import SensorData, CalibrationSettings, FarmJournal # FarmJournal 추가
+from .models import SensorData, CalibrationSettings, FarmJournal # FarmJournal �߰�
 import json
 import serial
 import time
@@ -63,9 +63,6 @@ def get_stable_reading_from_arduino(data_index):
     finally:
         if ser and ser.is_open:
             ser.close()
-
-# --- API Views ---
-
 def settings_api(request):
     settings = CalibrationSettings.load()
 
@@ -118,7 +115,6 @@ def settings_api(request):
             print(f"Error saving settings: {e}")
             return JsonResponse({'status': 'error', 'message': 'Failed to save settings.'}, status=500)
 
-
 def calibration_api(request):
     if request.method != 'POST':
         return HttpResponseBadRequest("Only POST requests are allowed.")
@@ -153,9 +149,6 @@ def calibration_api(request):
 
     # If action was valid but reading failed somehow (shouldn't happen with current logic)
     return HttpResponseBadRequest("Invalid action specified or failed to execute.")
-
-# --- Main Application Views ---
-
 def sensor_dashboard_view(request):
     return render(request, 'omnitor/index.html')
 
@@ -183,7 +176,6 @@ def latest_data_api(request):
     except Exception as e:
         print(f"Error in latest_data_api: {e}")
         return JsonResponse({'status': 'error', 'message': 'Server error fetching latest data.'}, status=500)
-
 def historical_data_api(request):
     start_date_str = request.GET.get('start_date')
     end_date_str = request.GET.get('end_date')
@@ -236,9 +228,6 @@ def historical_data_api(request):
     except Exception as e:
         print(f"Error querying or thinning database: {e}")
         return JsonResponse({'status': 'error', 'message': 'Error retrieving data from database.'}, status=500)
-
-
-    # --- Prepare Data ---
     data = {
         # ALWAYS return the full ISO 8601 timestamp string.
         # The browser (Chart.js + moment.js) will handle the display formatting.
@@ -285,7 +274,6 @@ def journal_api(request):
         except Exception as e:
             print(f"Error fetching journal entry for {date_str}: {e}")
             return JsonResponse({'status': 'error', 'message': 'Failed to retrieve journal entry.'}, status=500)
-
 
     if request.method == 'POST':
         try:

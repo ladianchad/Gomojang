@@ -42,11 +42,57 @@
         .date-range-picker { padding: 10px 15px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; cursor: pointer; background-color: white; }
         #date-range-picker-container { display: none; margin-left: 10px; } 
         .data-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
-        .data-card { background-color: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .data-card .value, .data-card .unit {
+            display: none;
+        }
+        .data-card .progress-circle-container {
+            margin-top: 10px;
+            position: relative;
+        }
+        /* This rotates the entire SVG so 0% is at the top */
+        .data-card svg {
+            transform: rotate(-90deg);
+        }
+        .progress-bg {
+            fill: transparent;
+            stroke: #e0e0e0; /* Background circle color */
+            stroke-width: 20;
+        }
+        .progress-fg {
+            fill: transparent;
+            stroke-width: 20;
+            stroke-linecap: round; /* Gives it a nice rounded edge */
+            transition: stroke-dashoffset 0.3s ease;
+            /* The stroke-dasharray and dashoffset will be set in the HTML/JS */
+        }
+        /* This counter-rotates the text to be upright */
+        .progress-text {
+            transform: rotate(90deg);
+            transform-origin: 91px 91px;
+            
+            font-size: 40px;
+            font-weight: bold;
+            fill: #000000;
+            
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+        /* This counter-rotates the unit text */
+        .progress-unit {
+            transform: rotate(90deg);
+            transform-origin: 91px 120px; 
+
+            font-size: 25px;
+            fill: #7a7a7a;
+
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+        .data-card { background-color: #f5f5f5; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.2s; }
         .data-card:hover { transform: translateY(-5px); }
         .data-card .label { font-size: 1rem; color: #555; margin-bottom: 10px; }
-        .data-card .value { font-size: 2.2rem; font-weight: bold; color: #1a2b4d; }
-        .data-card .unit { font-size: 1rem; color: #777; margin-left: 5px; }
+        /*.data-card .value { font-size: 2.2rem; font-weight: bold; color: #1a2b4d; }
+        .data-card .unit { font-size: 1rem; color: #777; margin-left: 5px; } */
         .chart-container { position: relative; height: 40vh; width: 100%; margin-top: 20px; }
         .calibration-section { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
         .calibration-box { padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #fdfdfd;}
@@ -104,28 +150,163 @@
 
     <div id="realtime" class="tab-content active">
         <h2>대시보드</h2>
+        
         <h3>환경</h3>
         <div class="data-grid">
-            <div class="data-card"><div class="label">온도</div><div class="value" id="latest-air_temperature">-</div><span class="unit">°C</span></div>
-            <div class="data-card"><div class="label">습도</div><div class="value" id="latest-air_humidity">-</div><span class="unit">%</span></div>
-            <div class="data-card"><div class="label">이산화탄소</div><div class="value" id="latest-co2">-</div><span class="unit">ppm</span></div>
-            <div class="data-card"><div class="label">일사량</div><div class="value" id="latest-insolation">-</div><span class="unit">W/m^2</span></div>
+            <div class="data-card">
+                <div class="label">온도</div>
+                <div class="progress-circle-container">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
+                        <circle id="inner-air_temperature" r="71" cx="91" cy="91" fill="#E8F5E9"></circle>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-air_temperature" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-air_temperature">-</text>
+                        <text class="progress-unit" x="66" y="160">°C</text>
+                    </svg>
+                </div>
+            </div>
+            <div class="data-card">
+                <div class="label">습도</div>
+                <div class="progress-circle-container">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
+                        <circle id="inner-air_humidity" r="71" cx="91" cy="91" fill="#E8F5E9"></circle>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-air_humidity" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-air_humidity">-</text>
+                        <text class="progress-unit" x="66" y="160">%</text>
+                    </svg>
+                </div>
+            </div>
+            <div class="data-card">
+                <div class="label">이산화탄소</div>
+                <div class="progress-circle-container">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
+                        <circle id="inner-co2" r="71" cx="91" cy="91" fill="#E8F5E9"></circle>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-co2" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-co2">-</text>
+                        <text class="progress-unit" x="66" y="160">ppm</text>
+                    </svg>
+                </div>
+            </div>
+            <div class="data-card">
+                <div class="label">일사량</div>
+                <div class="progress-circle-container">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
+                        <circle id="inner-insolation" r="71" cx="91" cy="91" fill="#E8F5E9"></circle>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-insolation" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-insolation">-</text>
+                        <text class="progress-unit" x="66" y="160" font-size="18px">W/m²</text>
+                    </svg>
+                </div>
+            </div>
         </div>
+        
         <h3>무게 & 배액</h3>
         <div class="data-grid">
-            <div class="data-card"><div class="label">무게</div><div class="value" id="latest-weight_calibrated">-</div><span class="unit">g</span></div>
-            <div class="data-card"><div class="label">수온</div><div class="value" id="latest-water_temperature">-</div><span class="unit">°C</span></div>
-            <div class="data-card"><div class="label">pH</div><div class="value" id="latest-ph_calibrated">-</div><span class="unit"></span></div>
-            <div class="data-card"><div class="label">EC</div><div class="value" id="latest-ec_calibrated">-</div><span class="unit">uS/cm</span></div>
+            <div class="data-card">
+                <div class="label">무게</div>
+                <div class="progress-circle-container">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
+                        <circle id="inner-weight_calibrated" r="71" cx="91" cy="91" fill="#E8F5E9"></circle>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-weight_calibrated" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-weight_calibrated">-</text>
+                        <text class="progress-unit" x="66" y="160">g</text>
+                    </svg>
+                </div>
+            </div>
+            <div class="data-card">
+                <div class="label">수온</div>
+                <div class="progress-circle-container">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
+                        <circle id="inner-water_temperature" r="71" cx="91" cy="91" fill="#E8F5E9"></circle>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-water_temperature" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-water_temperature">-</text>
+                        <text class="progress-unit" x="66" y="160">°C</text>
+                    </svg>
+                </div>
+            </div>
+            <div class="data-card">
+                <div class="label">pH</div>
+                <div class="progress-circle-container">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
+                        <circle id="inner-ph_calibrated" r="71" cx="91" cy="91" fill="#E8F5E9"></circle>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-ph_calibrated" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-ph_calibrated">-</text>
+                        <text class="progress-unit" x="66" y="160">pH</text>
+                    </svg>
+                </div>
+            </div>
+            <div class="data-card">
+                <div class="label">EC</div>
+                <div class="progress-circle-container">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
+                        <circle id="inner-ec_calibrated" r="71" cx="91" cy="91" fill="#E8F5E9"></circle>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-ec_calibrated" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-ec_calibrated">-</text>
+                        <text class="progress-unit" x="66" y="160" font-size="18px">uS/cm</text>
+                    </svg>
+                </div>
+            </div>
         </div>
+        
         <h3>토양</h3>
         <div class="data-grid">
-            <div class="data-card"><div class="label">토양 온도</div><div class="value" id="latest-soil_temperature">-</div><span class="unit">°C</span></div>
-            <div class="data-card"><div class="label">토양 습도</div><div class="value" id="latest-soil_humidity">-</div><span class="unit">%</span></div>
-            <div class="data-card"><div class="label">토양 EC</div><div class="value" id="latest-soil_conductivity">-</div><span class="unit">uS/cm</span></div>
-            <div class="data-card"><div class="label">토양 pH</div><div class="value" id="latest-soil_ph">-</div><span class="unit"></span></div>
+            <div class="data-card">
+                <div class="label">토양 온도</div>
+                <div class="progress-circle-container">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
+                        <circle id="inner-soil_temperature" r="71" cx="91" cy="91" fill="#E8F5E9"></circle>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-soil_temperature" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-soil_temperature">-</text>
+                        <text class="progress-unit" x="66" y="160">°C</text>
+                    </svg>
+                </div>
+            </div>
+            <div class="data-card">
+                <div class="label">토양 습도</div>
+                <div class="progress-circle-container">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
+                        <circle id="inner-soil_humidity" r="71" cx="91" cy="91" fill="#E8F5E9"></circle>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-soil_humidity" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-soil_humidity">-</text>
+                        <text class="progress-unit" x="66" y="160">%</text>
+                    </svg>
+                </div>
+            </div>
+            <div class="data-card">
+                <div class="label">토양 EC</div>
+                <div class="progress-circle-container">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
+                        <circle id="inner-soil_conductivity" r="71" cx="91" cy="91" fill="#E8F5E9"></circle>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-soil_conductivity" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-soil_conductivity">-</text>
+                        <text class="progress-unit" x="66" y="160" font-size="18px">uS/cm</text>
+                    </svg>
+                </div>
+            </div>
+            <div class="data-card">
+                <div class="label">토양 pH</div>
+                <div class="progress-circle-container">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
+                        <circle id="inner-soil_ph" r="71" cx="91" cy="91" fill="#E8F5E9"></circle>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-soil_ph" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-soil_ph">-</text>
+                        <text class="progress-unit" x="66" y="160">pH</text>
+                    </svg>
+                </div>
+            </div>
         </div>
-        <p style="text-align: center; margin-top: 20px; color: #888;">마지막 업데이트 시간간: <span id="latest-timestamp">-</span></p>
+        <p style="text-align: center; margin-top: 20px; color: #888;">마지막 업데이트 시간: <span id="latest-timestamp">-</span></p>
     </div>
 
     <div id="graphs" class="tab-content">
@@ -143,7 +324,7 @@
                 <label for="date-range-picker">Select Date:</label>
                 <input type="text" id="date-range-picker" class="date-range-picker" placeholder="Select date range...">
             </div>
-            <button id="refresh-graphs-btn" style="margin-left: 10px;">Load Data</button>
+            <button id="refresh-graphs-btn" style="margin-left: 10px;">데이터 가져오기</button>
              <span id="graph-status" class="status-message" style="margin-left: 15px;"></span> 
         </div>
         <div class="chart-container"><canvas id="weightChart"></canvas></div>
@@ -158,12 +339,12 @@
                 <input type="text" id="journal-calendar" style="display:none;">
             </div>
             <div class="journal-display">
-                <h3><span id="display-date">오늘</span>의 일</h3>
+                <h3><span id="display-date">오늘</span>의 일지</h3>
                 <div id="journal-content-display">
-                    <p>Please select a date from the calendar.</p>
+                    <p>달력에서 날짜를 선택해 주세요.</p>
                 </div>
                 <img id="journal-image" src="https://placehold.co/600x400/eee/ccc?text=Image" alt="Journal Image">
-                <a id="download-image-link" href="#" class="download-btn" style="display: none;" download>Download Image</a>
+                <a id="download-image-link" href="#" class="download-btn" style="display: none;" download>이미지 저장하기</a>
             </div>
             <div class="journal-form">
                 <h3>일지 수정</h3>
@@ -324,6 +505,91 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Tab 1: 실시간 Data ---
+
+    function updateProgressCircle(field, value, min, max, defaultColor, defcircleColor) {
+        const textEl = document.getElementById(`text-${field}`);
+        const barEl = document.getElementById(`bar-${field}`);
+        const innerEl = document.getElementById(`inner-${field}`);
+
+        if (!textEl || !barEl || !innerEl) {
+            console.warn(`Elements for ${field} not found`);
+            return;
+        }
+
+        let displayValue = '-';
+        let percentage = 0; // Default to 0% (empty)
+        const circumference = 509; // 2 * PI * 81
+
+        let strokeColor = defaultColor;
+        let innerFillColor = '#f0f0f0';
+
+
+        if (typeof value === 'number' && !isNaN(value)) {
+            innerFillColor = defcircleColor;
+            if (value === 0) {
+                innerFillColor = '#F3E5FF';
+                strokeColor = '#e0e0e0';
+            }
+            // change color for pH dashboard
+            if (field === 'ph_calibrated') {
+                if ((value > 0 && value < 5.0) || (value > 7.0 && value <= 14)) {
+                    strokeColor = '#FF4F4F'; // red
+                    innerFillColor = '#FFBFBF';
+                } else if ((value >= 5.0 && value < 5.5) || (value > 6.5 && value <= 7.0)) {
+                    strokeColor = '#FFE54F'; // yellow
+                    innerFIllColor = 'FFF4B8';
+                } else if (value >= 5.5 && value <= 6.5) {
+                    strokeColor = '#73E866'; // green
+                }
+            }
+
+            // change color for air humidity
+            else if (field === 'air_humidity') {
+                if ((value > 0 && value < 40) || (value > 90 && value <= 100)) {
+                    strokeColor = '#FF4F4F'; // red
+                    innerFillColor = '#FFBFBF';
+                } else if ((value >= 40 && value < 60) || (value > 80 && value <= 90)) {
+                    strokeColor = '#FFE54F'; // yellow
+                    innerFIllColor = 'FFF4B8';
+                } else if (value >= 60 && value <= 80) {
+                    strokeColor = '#73E866'; // green
+                }
+            }
+
+            // Clamp value between min and max to avoid over/underflow
+            const clampedValue = Math.max(min, Math.min(value, max));
+            
+            // Calculate percentage, ensuring no division by zero if min === max
+            if (max - min !== 0) {
+                percentage = (clampedValue - min) / (max - min);
+            } else if (clampedValue >= min) {
+                percentage = 1; // 100% if value is at min/max
+            }
+            
+            // Format value for display
+            if (field.includes('ph')) {
+                displayValue = value.toFixed(2);
+            } else if (value > 100 || value < 1) {
+                displayValue = value.toFixed(0);
+            } else {
+                displayValue = value.toFixed(1);
+            }
+
+        }
+
+        // Calculate the dash offset
+        // 100% full = offset 0
+        // 0% full = offset 509 (circumference)
+        const offset = (1 - percentage) * circumference;
+        textEl.textContent = displayValue;
+        
+    
+        barEl.style.strokeDashoffset = offset;
+        barEl.style.stroke = strokeColor;
+        innerEl.style.fill = innerFillColor;
+    }
+
+
     async function updateLatestData() {
         try {
             const response = await fetchWithTimeout('/latest_data_api/');
@@ -332,14 +598,31 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.status === 'error') return;
             
             document.getElementById('latest-timestamp').textContent = data.timestamp;
-            const fields = ['air_temperature', 'air_humidity', 'co2', 'insolation', 'water_temperature', 'weight_calibrated', 'ph_calibrated', 'ec_calibrated', 'soil_temperature', 'soil_humidity', 'soil_conductivity', 'soil_ph'];
-            fields.forEach(field => {
-                const el = document.getElementById(`latest-${field}`);
-                if (el) {
-                    const value = data[field];
-                    el.textContent = (typeof value === 'number') ? value.toFixed(2) : (value || '-');
-                }
-            });
+            
+            // --- Define Min/Max ranges for your progress bars ---
+            // !!! You should adjust these values to fit your farm !!!
+            const sensorConfig = {
+                'air_temperature': { min: -20, max: 80, defaultColor: '#73E866', defcircleColor: '#E8F5E9' },
+                'air_humidity': { min: 0, max: 100, defaultColor: '#73E866', defcircleColor: '#E8F5E9' },
+                'co2': { min: 0, max: 5000, defaultColor: '#73E866', defcircleColor: '#E8F5E9' },
+                'insolation': { min: 0, max: 1300, defaultColor: '#73E866', defcircleColor: '#E8F5E9' },
+                'weight_calibrated': { min: 0, max: 80000, defaultColor: '#73E866', defcircleColor: '#E8F5E9' },
+                'water_temperature': { min: -20, max: 80, defaultColor: '#73E866', defcircleColor: '#E8F5E9' },
+                'ph_calibrated': { min: 0, max: 14, defaultColor: '#73E866', defcircleColor: '#E8F5E9' },
+                'ec_calibrated': { min: 0, max: 5000, defaultColor: '#73E866', defcircleColor: '#E8F5E9' },
+                'soil_temperature': { min: -20, max: 80, defaultColor: '#73E866', defcircleColor: '#E8F5E9' },
+                'soil_humidity': { min: 0, max: 100, defaultColor: '#73E866', defcircleColor: '#E8F5E9' },
+                'soil_conductivity': { min: 0, max: 5000, defaultColor: '#73E866', defcircleColor: '#E8F5E9' },
+                'soil_ph': { min: 0, max: 14, defaultColor: '#73E866', defcircleColor: '#E8F5E9' }
+            };
+
+            // Loop through the config and update each circle
+            for (const field in sensorConfig) {
+                const config = sensorConfig[field];
+                const value = data[field];
+                updateProgressCircle(field, value, config.min, config.max, config.defaultColor, config.defcircleColor);
+            }
+
         } catch (error) {
             if (error.name !== 'AbortError') console.error("Error fetching latest data:", error);
         }
@@ -541,7 +824,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // --- (데이터 변환 함수) ---
             // 서버에서 받은 labels 배열과 value 배열을 [{x, y}] 형식으로 변환
             const transformData = (labels, values) => {
                 if (!values || !Array.isArray(values)) {
@@ -567,17 +849,14 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (selectedOption === '24h') {
                 timeConfig = { unit: 'hour', stepSize: 3, displayFormats: { hour: 'MM/DD HH:mm' } };
             } else if (selectedOption === '7d' || selectedOption === 'custom') {
-                timeConfig = { unit: 'hour', stepSize: 6, displayFormats: { hour: 'MM/DD' } };
+                timeConfig = { unit: 'hour', stepSize: 6, displayFormats: { hour: 'MM/DD HH:mm' } };
             }
             
             for (const key in map) {
                 if(map[key].chart) {
                     
-                    // --- 여기가 핵심적인 변경 ---
-                    // 1. data.labels를 차트에 직접 할당하지 않습니다. (삭제)
-                    // map[key].chart.data.labels = data.labels; // (이전 코드 삭제)
 
-                    // 2. 각 데이터셋의 데이터를 {x, y} 형식으로 변환하여 할당합니다.
+                    // 각 데이터셋의 데이터를 {x, y} 형식으로 변환하여 할당
                     map[key].datasets.forEach((datasetValues, i) => {
                         if (map[key].chart.data.datasets[i]) {
                             // transformData 함수로 데이터 형식 변환
@@ -585,7 +864,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
                     
-                    // 3. x축 시간 설정을 적용합니다.
+                    // x축 시간 설정을 적용합
                     map[key].chart.options.scales.xAxes[0].time = {
                         ...map[key].chart.options.scales.xAxes[0].time,
                         ...timeConfig
@@ -621,20 +900,34 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('display-date').textContent = date;
         document.getElementById('form-date').value = date;
         const [displayDiv, imageEl, form, downloadLink] = [document.getElementById('journal-content-display'), document.getElementById('journal-image'), document.getElementById('journal-entry-form'), document.getElementById('download-image-link')];
+        const imageExtension = '.jpg';
+        const imageUrl = `/static/journal_images/${date}${imageExtension}`;
+
         try {
             const response = await fetchWithTimeout(`/journal_api/?date=${date}`);
             const data = await response.json();
-            imageEl.src = data.image_url + '?' + new Date().getTime();
-            downloadLink.href = data.image_url;
-            downloadLink.download = `omnitor-journal-${date}.jpg`;
-            imageEl.onerror = () => { imageEl.src = 'https://placehold.co/600x400/eee/ccc?text=No+Image'; downloadLink.style.display = 'none'; };
-            imageEl.onload = () => { downloadLink.style.display = imageEl.src.includes('placehold.co') ? 'none' : 'inline-block'; };
+            imageEl.src = imageUrl + '?' + new Date().getTime();
+            downloadLink.href = imageUrl;
+            downloadLink.download = `omnitor-journal-${date}${imageExtension}`;
+            
+            imageEl.onerror = () => { 
+                imageEl.src = 'https://placehold.co/600x400/eee/ccc?text=No+Image'; 
+                downloadLink.style.display = 'none'; 
+            };
+            imageEl.onload = () => { 
+                downloadLink.style.display = imageEl.src.includes('placehold.co') ? 'none' : 'inline-block'; };
+
             if (data.status === 'found') {
-                form.farm_work.value = data.farm_work || ''; form.pesticide.value = data.pesticide || ''; form.fertilizer.value = data.fertilizer || ''; form.harvest.value = data.harvest || ''; form.notes.value = data.notes || '';
-                displayDiv.innerHTML = `<h4>1. Farm Work:</h4><p>${data.farm_work||'None'}</p><h4>2. Pesticide:</h4><p>${data.pesticide||'None'}</p><h4>3. Fertilizer:</h4><p>${data.fertilizer||'None'}</p><h4>4. Harvest:</h4><p>${data.harvest||'None'}</p><h4>5. Notes:</h4><p>${data.notes||'None'}</p>`;
-            } else {
+                form.farm_work.value = data.farm_work || ''; 
+                form.pesticide.value = data.pesticide || ''; 
+                form.fertilizer.value = data.fertilizer || ''; 
+                form.harvest.value = data.harvest || ''; 
+                form.notes.value = data.notes || '';
+                displayDiv.innerHTML = `<h4>1. 농작업:</h4><p>${data.farm_work||'None'}</p><h4>2. 농약:</h4><p>${data.pesticide||'None'}</p><h4>3. 비료:</h4><p>${data.fertilizer||'None'}</p><h4>4. 수확:</h4><p>${data.harvest||'None'}</p><h4>5. 특이사항:</h4><p>${data.notes||'None'}</p>`;
+            } 
+            else {
                 form.reset();
-                displayDiv.innerHTML = '<p>이 날의 일지가 없습니다. 일지를 작성해 주세요.</p>';
+                displayDiv.innerHTML = '<p>해당 날의 일지가 없습니다. 일지를 작성해 주세요.</p>';
             }
         } catch (error) {
             console.error("Error loading journal:", error);
