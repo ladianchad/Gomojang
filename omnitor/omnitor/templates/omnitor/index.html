@@ -906,23 +906,28 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetchWithTimeout(`/journal_api/?date=${date}`);
             const data = await response.json();
-
             imageEl.src = imageUrl + '?' + new Date().getTime();
-            downloadLink.href = image_url;
+            downloadLink.href = imageUrl;
             downloadLink.download = `omnitor-journal-${date}${imageExtension}`;
+            
             imageEl.onerror = () => { 
                 imageEl.src = 'https://placehold.co/600x400/eee/ccc?text=No+Image'; 
                 downloadLink.style.display = 'none'; 
             };
             imageEl.onload = () => { 
-                downloadLink.style.display = imageEl.src.includes('placehold.co') ? 'none' : 'inline-block'; 
-            };
+                downloadLink.style.display = imageEl.src.includes('placehold.co') ? 'none' : 'inline-block'; };
+
             if (data.status === 'found') {
-                form.farm_work.value = data.farm_work || ''; form.pesticide.value = data.pesticide || ''; form.fertilizer.value = data.fertilizer || ''; form.harvest.value = data.harvest || ''; form.notes.value = data.notes || '';
+                form.farm_work.value = data.farm_work || ''; 
+                form.pesticide.value = data.pesticide || ''; 
+                form.fertilizer.value = data.fertilizer || ''; 
+                form.harvest.value = data.harvest || ''; 
+                form.notes.value = data.notes || '';
                 displayDiv.innerHTML = `<h4>1. Farm Work:</h4><p>${data.farm_work||'None'}</p><h4>2. Pesticide:</h4><p>${data.pesticide||'None'}</p><h4>3. Fertilizer:</h4><p>${data.fertilizer||'None'}</p><h4>4. Harvest:</h4><p>${data.harvest||'None'}</p><h4>5. Notes:</h4><p>${data.notes||'None'}</p>`;
-            } else {
+            } 
+            else {
                 form.reset();
-                displayDiv.innerHTML = '<p>이 날의 일지가 없습니다. 일지를 작성해 주세요.</p>';
+                displayDiv.innerHTML = '<p>해당 날의 일지가 없습니다. 일지를 작성해 주세요.</p>';
             }
         } catch (error) {
             console.error("Error loading journal:", error);
