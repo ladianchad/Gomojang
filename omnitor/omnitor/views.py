@@ -12,9 +12,25 @@ import statistics
 import math
 import os
 
-# --- Configuration ---
+# --- Serial Configuration ---
 SERIAL_PORT = '/dev/ttyACM0'
 BAUD_RATE = 9600
+
+# --- Camera Settings Path --
+BASE_DIR_GOMOJANG = os.path.expanduser("~/gomojang/omnitor") 
+CONFIG_FILE_PATH = os.path.join(BASE_DIR_GOMOJANG, "camera_config.json")
+DEFAULT_CAPTURE_TIME = "12:00"
+
+# --- Helper Function for Camera Time ---
+def get_current_capture_time():
+    try:
+        with open(CONFIG_FILE_PATH, 'r') as f:
+            config = json.load(f)
+            time_str = config.get('capture_time', DEFAULT_CAPTURE_TIME)
+            datetime.strptime(time_str, '%H:%M')
+            return time_str
+    except (FileNotFoundError, json.JSONDecodeError, ValueError):
+        return DEFAULT_CAPTURE_TIME
 
 # --- Helper Function for Calibration ---
 def get_stable_reading_from_arduino(data_index):
@@ -23,20 +39,20 @@ def get_stable_reading_from_arduino(data_index):
     try:
         if not os.path.exists(SERIAL_PORT):
             print(f"Error: Serial port {SERIAL_PORT} not found.")
-            return (None, f"Serial port {SERIAL_PORT} not found.") # Return error message
+            return (None, f"Serial port {SERIAL_PORT} not found.")
 
-        ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1.5) # Slightly shorter timeout
+        ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1.5)
         ser.flushInput()
         sample_count = 0
-        max_samples = 15 # Reduced sample count for faster response
+        max_samples = 15
         start_time = time.time()
 
-        while sample_count < max_samples and (time.time() - start_time) < 5: # 5-second overall timeout
+        while sample_count < max_samples and (time.time() - start_time) < 5:
             if ser.in_waiting > 0:
                 try:
                     line = ser.readline().decode('utf-8').strip()
                     parts = line.split(',')
-                    if len(parts) == 8: # Check for 8 parts
+                    if len(parts) == 8:
                         raw_value = float(parts[data_index])
                         values.append(raw_value)
                         sample_count += 1
@@ -48,18 +64,18 @@ def get_stable_reading_from_arduino(data_index):
         if len(values) < 2: # Require at least 2 valid samples
             msg = f"Not enough valid data received. Got {len(values)} samples."
             print(f"Error: {msg}")
-            return (None, msg) # Return error message
+            return (None, msg)
         
         return (statistics.median(values), "Success")
 
     except serial.SerialException as e:
         msg = f"Serial port error: {e}"
         print(f"Error: {msg}")
-        return (None, msg) # Return error message
+        return (None, msg)
     except Exception as e:
         msg = f"An unexpected error occurred: {e}"
         print(f"Error: {msg}")
-        return (None, msg) # Return error message
+        return (None, msg)
     finally:
         if ser and ser.is_open:
             ser.close()
@@ -143,11 +159,9 @@ def calibration_api(request):
             return JsonResponse({'status': 'success', 'voltage': reading})
 
     if reading is None:
-        # Include the specific error message from the helper function
         detailed_message = f"Could not get stable reading: {message}"
         return JsonResponse({'status': 'error', 'message': detailed_message}, status=500)
 
-    # If action was valid but reading failed somehow (shouldn't happen with current logic)
     return HttpResponseBadRequest("Invalid action specified or failed to execute.")
 def sensor_dashboard_view(request):
     return render(request, 'omnitor/index.html')
@@ -213,24 +227,18 @@ def historical_data_api(request):
         print(f"Found {count} data points for the selected range.") # Debugging
 
         MAX_GRAPH_POINTS = 500
-        data_points = [] # Initialize as empty list
+        data_points = []
         if count > MAX_GRAPH_POINTS:
             step = max(1, count // MAX_GRAPH_POINTS)
-            # Apply slicing and THEN convert to list
             data_points = list(data_points_qs[::step])
-            # --- FIX: Use len() for the list ---
             print(f"Thinned data from {count} to {len(data_points)} points (step={step})")
         elif count > 0:
-            # Convert to list only if there's data
             data_points = list(data_points_qs)
-        # If count is 0, data_points remains an empty list
 
     except Exception as e:
         print(f"Error querying or thinning database: {e}")
         return JsonResponse({'status': 'error', 'message': 'Error retrieving data from database.'}, status=500)
     data = {
-        # ALWAYS return the full ISO 8601 timestamp string.
-        # The browser (Chart.js + moment.js) will handle the display formatting.
         'labels': [dp.timestamp.isoformat() for dp in data_points],
         'datasets': {
             'weight': [dp.weight_calibrated if dp.weight_calibrated is not None else None for dp in data_points],
@@ -247,20 +255,15 @@ def historical_data_api(request):
             'soil_ph': [dp.soil_ph if dp.soil_ph is not None else None for dp in data_points],
         }
     }
-    # --- [END OF MODIFICATION] ---
     return JsonResponse(data)
 
 def journal_api(request):
     if request.method == 'GET':
         date_str = request.GET.get('date')
         if not date_str: return HttpResponseBadRequest("Date parameter is required.")
-
-        # Construct the expected image path relative to the static root
         image_name = f"{date_str}.jpg"
         image_relative_path = os.path.join('omnitor', 'journal_images', image_name)
         image_url = staticfiles_storage.url(image_relative_path)
-
-
         try:
             entry = FarmJournal.objects.get(date=date_str)
             return JsonResponse({
@@ -274,11 +277,10 @@ def journal_api(request):
         except Exception as e:
             print(f"Error fetching journal entry for {date_str}: {e}")
             return JsonResponse({'status': 'error', 'message': 'Failed to retrieve journal entry.'}, status=500)
-
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            date_str = data.pop('date', None) # Safely get date
+            date_str = data.pop('date', None)
             if not date_str:
                 return HttpResponseBadRequest("Date is required to save journal entry.")
 
@@ -301,3 +303,31 @@ def journal_api(request):
             print(f"Error saving journal for {date_str}: {e}")
             # Provide a more generic error message to the user
             return JsonResponse({'status': 'error', 'message': 'Failed to save journal entry due to a server error.'}, status=500)
+
+# --- Camera Time Setting API ---
+def camera_time_api(request):
+    if request.method == 'GET':
+        current_time = get_current_capture_time()
+        return JsonResponse({'status': 'success', 'capture_time': current_time})
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            new_time = data.get('capture_time') # e.g., "14:30"
+            if not new_time:
+                return HttpResponseBadRequest("JSON 본문에 'capture_time'이 없습니다.")
+            try:
+                datetime.strptime(new_time, '%H:%M')
+            except ValueError:
+                 return HttpResponseBadRequest("잘못된 시간 형식입니다. HH:MM 형식을 사용하세요.")
+            config_data = {'capture_time': new_time}
+            os.makedirs(os.path.dirname(CONFIG_FILE_PATH), exist_ok=True)
+            with open(CONFIG_FILE_PATH, 'w') as f:
+                json.dump(config_data, f)
+            print(f"Camera capture time updated to: {new_time}")
+            return JsonResponse({'status': 'success', 'message': f'캡처 시간이 {new_time}으로 저장되었습니다.'})
+        except json.JSONDecodeError:
+            return HttpResponseBadRequest("잘못된 JSON 형식입니다.")
+        except Exception as e:
+            print(f"Error saving camera config: {e}")
+            return JsonResponse({'status': 'error', 'message': '서버 오류로 시간 저장에 실패했습니다.'}, status=500)
+    return HttpResponseBadRequest("지원하지 않는 메소드입니다.")
