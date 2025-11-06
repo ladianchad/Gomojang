@@ -4,7 +4,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from django.conf import settings as django_settings
 from django.contrib.staticfiles.storage import staticfiles_storage
-from .models import SensorData, CalibrationSettings, FarmJournal # FarmJournal �߰�
+from .models import SensorData, CalibrationSettings, FarmJournal
 import json
 import serial
 import time
@@ -20,6 +20,8 @@ BAUD_RATE = 9600
 BASE_DIR_GOMOJANG = os.path.expanduser("~/gomojang/omnitor") 
 CONFIG_FILE_PATH = os.path.join(BASE_DIR_GOMOJANG, "camera_config.json")
 DEFAULT_CAPTURE_TIME = "12:00"
+
+IMAGE_FILES_DIRECTORY = os.path.join(BASE_DIR_GOMOJANG, "omnitor/static/journal_images/")
 
 # --- Helper Function for Camera Time ---
 def get_current_capture_time():
@@ -264,16 +266,29 @@ def journal_api(request):
         image_name = f"{date_str}.jpg"
         image_relative_path = os.path.join('omnitor', 'journal_images', image_name)
         image_url = staticfiles_storage.url(image_relative_path)
+        image_capture_time_str = None
+        try:
+            full_image_path = os.path.join(IMAGE_FILES_DIRECTORY, image_name)
+            if os.path.exists(full_image_path):
+                mtime = os.path.getmtime(full_image_path)
+                image_capture_time = datetime.fromtimestamp(mtime)
+                image_capture_time_str = image_capture_time.strftime('%H:%M:%S')
+        except Exception as e:
+            print(f"Error getting image mtime for {date_str}: {e}")
         try:
             entry = FarmJournal.objects.get(date=date_str)
             return JsonResponse({
                 'status': 'found',
-                'farm_work': entry.farm_work, 'pesticide': entry.pesticide,
-                'fertilizer': entry.fertilizer, 'harvest': entry.harvest,
-                'notes': entry.notes, 'image_url': image_url,
+                'farm_work': entry.farm_work,
+                'pesticide': entry.pesticide,
+                'fertilizer': entry.fertilizer,
+                'harvest': entry.harvest,
+                'notes': entry.notes,
+                'image_url': image_url,
+                'image_capture_time': image_capture_time_str
             })
         except FarmJournal.DoesNotExist:
-            return JsonResponse({'status': 'not_found', 'image_url': image_url})
+            return JsonResponse({'status': 'not_found', 'image_url': image_url, 'image_capture_time': image_capture_time_str})
         except Exception as e:
             print(f"Error fetching journal entry for {date_str}: {e}")
             return JsonResponse({'status': 'error', 'message': 'Failed to retrieve journal entry.'}, status=500)
