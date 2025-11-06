@@ -3,7 +3,7 @@ import cv2
 from datetime import datetime
 import schedule
 import time
-
+import json
 
 # --- Directory and Time Settings ---
 BASE_DIR = os.path.expanduser("~/gomojang/omnitor")
