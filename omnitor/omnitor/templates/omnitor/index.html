@@ -321,7 +321,7 @@
                 <option value="custom">직접 선택하기...</option> 
             </select>
             <div id="date-range-picker-container"> 
-                <label for="date-range-picker">Select Date:</label>
+                <label for="date-range-picker">날짜를 선택하세요:</label>
                 <input type="text" id="date-range-picker" class="date-range-picker" placeholder="Select date range...">
             </div>
             <button id="refresh-graphs-btn" style="margin-left: 10px;">데이터 가져오기</button>
@@ -332,6 +332,7 @@
         <div class="chart-container"><canvas id="waterChart"></canvas></div>
         <div class="chart-container"><canvas id="soilChart"></canvas></div>
     </div>
+
     <div id="journal" class="tab-content">
         <h2>농장 일지</h2>
         <div class="journal-layout">
@@ -343,10 +344,25 @@
                 <div id="journal-content-display">
                     <p>달력에서 날짜를 선택해 주세요.</p>
                 </div>
-                <img id="journal-image" src="https://placehold.co/600x400/eee/ccc?text=Image" alt="Journal Image">
+            
+            <div class="journal-section" style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #eee;">
+                <h4>일일 캡처 시간 설정</h4>
+                <div>
+                    <span>현재 설정된 시간: </span>
+                    <strong id="current-capture-time-display">불러오는 중...</strong>
+                </div>
+                <div style="margin-top: 10px;">
+                    <label for="new-capture-time-input">새 시간 (24시):</label>
+                    <input type="time" id="new-capture-time-input" class="form-control" style="width: auto; display: inline-block;">
+                    <button type="button" id="save-capture-time-btn" class="btn">새 시간 저장</button>
+                </div>
+            </div>
+        
+            <img id="journal-image" src="https://placehold.co/600x400/eee/ccc?text=Image" alt="Journal Image" style="margin-top: 15px;">
+                <p id="image-capture-time-display" style="text-align: center; color: #555; font-size: 0.9em; margin-top: 5px;"></p>
                 <a id="download-image-link" href="#" class="download-btn" style="display: none;" download>이미지 저장하기</a>
             </div>
-            <div class="journal-form">
+        <div class="journal-form">
                 <h3>일지 수정</h3>
                 <form id="journal-entry-form">
                     <input type="hidden" id="form-date">
@@ -366,7 +382,6 @@
             </div>
         </div>
     </div>
-
 
 
     <div id="calibration" class="tab-content">
@@ -460,6 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     //document.getElementById('timespan-select').addEventListener('change', () => updateAllCharts());
     document.getElementById('save-journal-btn').addEventListener('click', () => saveJournalEntry());
+    document.getElementById('save-capture-time-btn').addEventListener('click', () => saveCameraCaptureTime());
     document.getElementById('tare-btn').addEventListener('click', () => performTare());
     document.getElementById('calibrate-btn').addEventListener('click', () => performWeightCalibrate());
     document.getElementById('ph-cal-btn-1').addEventListener('click', () => performPhCalibrate(1));
@@ -486,8 +502,12 @@ document.addEventListener('DOMContentLoaded', () => {
              handleGraphControlsChange(); // Update charts based on initial dropdown/picker state
         }
         if (tabName === 'calibration') loadSettings();
-        if (tabName === 'journal') initializeCalendar();
+        if (tabName === 'journal') {
+            initializeCalendar();
+            loadCurrentCaptureTime();
+        }
     }
+    
     // --- API Fetch Functions ---
     async function fetchWithTimeout(url, options = {}, timeout = 15000) {
         const controller = new AbortController();
@@ -899,7 +919,13 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadJournalEntry(date) {
         document.getElementById('display-date').textContent = date;
         document.getElementById('form-date').value = date;
-        const [displayDiv, imageEl, form, downloadLink] = [document.getElementById('journal-content-display'), document.getElementById('journal-image'), document.getElementById('journal-entry-form'), document.getElementById('download-image-link')];
+        const [displayDiv, imageEl, form, downloadLink, captureTimeEl] = [
+            document.getElementById('journal-content-display'), 
+            document.getElementById('journal-image'),
+            document.getElementById('journal-entry-form'),
+            document.getElementById('download-image-link'),
+            document.getElementById('image-capture-time-display')
+        ];
         const imageExtension = '.jpg';
         const imageUrl = `/static/journal_images/${date}${imageExtension}`;
 
@@ -913,9 +939,19 @@ document.addEventListener('DOMContentLoaded', () => {
             imageEl.onerror = () => { 
                 imageEl.src = 'https://placehold.co/600x400/eee/ccc?text=No+Image'; 
                 downloadLink.style.display = 'none'; 
+                captureTimeEl.style.display = 'none';
             };
             imageEl.onload = () => { 
                 downloadLink.style.display = imageEl.src.includes('placehold.co') ? 'none' : 'inline-block'; };
+                
+            if (data.image_capture_time) {
+                captureTimeEl.textContent = `사진 촬영 시간: ${data.image_capture_time}`;
+                captureTimeEl.style.display = 'block';
+            } 
+            else {
+                captureTimeEl.textContent = '';
+                captureTimeEl.style.display = 'none';
+            }
 
             if (data.status === 'found') {
                 form.farm_work.value = data.farm_work || ''; 
@@ -933,6 +969,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Error loading journal:", error);
             setStatus('journal-status', 'Failed to load journal.', 'error');
             downloadLink.style.display = 'none';
+            captureTimeEl.style.display = 'none';
         }
     }
 
@@ -952,6 +989,55 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             setStatus('journal-status', 'Network error while saving.', 'error');
+        }
+    }
+
+    async function loadCurrentCaptureTime() {
+        try {
+            const response = await fetchWithTimeout('camera_time_api/'); 
+            if (!response.ok) {
+                document.getElementById('current-capture-time-display').textContent = '로드 실패';
+                return;
+            }
+            const data = await response.json();
+            if (data.status === 'success') {
+                document.getElementById('current-capture-time-display').textContent = data.capture_time;
+                document.getElementById('new-capture-time-input').value = data.capture_time;
+            } else {
+                document.getElementById('current-capture-time-display').textContent = '오류';
+            }
+        } catch (error) {
+            console.error('Error fetching capture time:', error);
+            document.getElementById('current-capture-time-display').textContent = '연결 오류';
+        }
+    }
+    
+    async function saveCameraCaptureTime() {
+        const newTime = document.getElementById('new-capture-time-input').value;
+        if (!newTime) {
+            alert('시간을 선택하세요.');
+            return;
+        }
+
+        setStatus('journal-status', '새로운 캡처 시간을 저장 중입니다...', 'info');
+
+        try {
+            const response = await fetchWithTimeout('camera_time_api/', { 
+                method: 'POST', 
+                body: JSON.stringify({ 'capture_time': newTime }) 
+            });
+            
+            const result = await response.json();
+
+            if (response.ok) {
+                setStatus('journal-status', result.message, 'success');
+                document.getElementById('current-capture-time-display').textContent = newTime;
+            } else {
+                setStatus('journal-status', `저장 실패: ${result.message || 'Server error'}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error saving capture time:', error);
+            setStatus('journal-status', '저장 실패: 네트워크 오류 또는 타임아웃.', 'error');
         }
     }
 
