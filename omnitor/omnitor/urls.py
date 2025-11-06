@@ -5,12 +5,13 @@ from .views import (
     historical_data_api, 
     settings_api, 
     calibration_api,
-    journal_api 
+    journal_api,
+    camera_time_api
 )
 
 urlpatterns = [
     # Dashboard and Sensor APIs
-    path('dashboard/', sensor_dashboard_view, name='dashboard'),
+    path('', sensor_dashboard_view, name='dashboard'),
     path('latest_data_api/', latest_data_api, name='latest_data_api'),
     path('historical_data_api/', historical_data_api, name='historical_data_api'),
 
@@ -20,4 +21,7 @@ urlpatterns = [
     
     # Journal API
     path('journal_api/', journal_api, name='journal_api'),
+    
+    # Camera time API
+    path('camera_time_api/', camera_time_api, name='camera_time_api'),
 ]
