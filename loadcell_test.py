@@ -8,7 +8,7 @@ from collections import deque # Used for the moving average filter
 # 1. Settings
 # -----------------------------------------------------------------
 
-SERIAL_PORT = 'COM7'
+SERIAL_PORT = '/dev/ttyACM0'
 BAUD_RATE = 9600           
 
 # File and Sampling Settings
