@@ -24,4 +24,5 @@ urlpatterns = [
     
     # Camera time API
     path('camera_time_api/', camera_time_api, name='camera_time_api'),
+
 ]
