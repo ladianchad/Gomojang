@@ -1076,9 +1076,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (result.status === 'success') {
             // calibrationState에 pH/EC와 동일한 방식으로 저장합니다.
-            calibrationState[`weight_point${point}_raw`] = result.offset; // 'offset' 키에 raw 값이 담겨옴
+            calibrationState[`weight_point${point}_raw`] = result.raw;
             calibrationState[`weight_point${point}_value`] = weightValue;
-            document.getElementById(`weight-raw-${point}`).textContent = result.offset.toFixed(2);
+            document.getElementById(`weight-raw-${point}`).textContent = result.raw.toFixed(2);
             setStatus('weight-status', `Raw 값 (Point ${point})이 기록되었습니다.`, 'success');
         } else {
             setStatus('weight-status', `Error: ${result.message}`, 'error');
