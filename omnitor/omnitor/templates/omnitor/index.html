@@ -387,18 +387,21 @@
     <div id="calibration" class="tab-content">
         <div class="calibration-section">
             <div class="calibration-box">
-                <h2>무게 보정</h2>
-                <p><strong>영점:</strong> <span id="current-offset">...</span></p>
-                <p><strong>보정 계수:</strong> <span id="current-scale">...</span></p>
-                <hr>
-                <p><strong>1단계: 영점</strong><br>아무것도 올리지 마시고 '영점' 버튼을 눌러 주세요.</p>
-                <button id="tare-btn">영점 (0)</button>
-                <br><br>
-                <p><strong>2단계: 보정</strong><br>아는 무게를 올리시고 무게를 입력해 주세요.</p>
-                <input type="number" id="known-weight" placeholder="e.g., 100"> <span>g</span>
-                <button id="calibrate-btn" disabled>Calibrate</button>
-                <div id="weight-status" class="status-message"></div>
-            </div>
+                <h2>무게 보정</h2>
+                <p><strong>보정계수:</strong> <span id="current-weight-slope">...</span></p>
+                <p><strong>영점:</strong> <span id="current-weight-intercept">...</span></p>
+                <hr>
+                <p><strong>점 1 (예: 0 g 또는 100 g)</strong></p>
+                <input type="number" step="1" id="weight-val-1" value="0"> <span>g</span>
+                <button id="weight-cal-btn-1">입력</button>
+                <p><em>Raw Value 1: <span id="weight-raw-1">...</span></em></p>
+                <br>
+                <p><strong>점 2 (예: 500 g 또는 1000 g)</strong></p>
+                <input type="number" step="1" id="weight-val-2" value="1000"> <span>g</span>
+                <button id="weight-cal-btn-2">입력</button>
+                <p><em>Raw Value 2: <span id="weight-raw-2">...</span></em></p>
+                <div id="weight-status" class="status-message"></div>
+            </div>
             <div class="calibration-box">
                 <h2>pH 보정</h2>
                 <p><strong>영점:</strong> <span id="current-ph-intercept">...</span></p>
@@ -476,8 +479,8 @@ document.addEventListener('DOMContentLoaded', () => {
     //document.getElementById('timespan-select').addEventListener('change', () => updateAllCharts());
     document.getElementById('save-journal-btn').addEventListener('click', () => saveJournalEntry());
     document.getElementById('save-capture-time-btn').addEventListener('click', () => saveCameraCaptureTime());
-    document.getElementById('tare-btn').addEventListener('click', () => performTare());
-    document.getElementById('calibrate-btn').addEventListener('click', () => performWeightCalibrate());
+    document.getElementById('weight-cal-btn-1').addEventListener('click', () => performWeightCalibrate(1));
+    document.getElementById('weight-cal-btn-2').addEventListener('click', () => performWeightCalibrate(2));
     document.getElementById('ph-cal-btn-1').addEventListener('click', () => performPhCalibrate(1));
     document.getElementById('ph-cal-btn-2').addEventListener('click', () => performPhCalibrate(2));
     document.getElementById('ec-cal-btn-1').addEventListener('click', () => performEcCalibrate(1));
@@ -1058,40 +1061,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function performTare() {
-        setStatus('weight-status', '영점을 맞추고 있습니다... 잠시만 기다려 주세요.', 'info');
-        document.getElementById('tare-btn').disabled = true;
-        const result = await performApiAction('tare');
-        if (result.status === 'success') {
-            calibrationState.weight_offset = result.offset;
-            document.getElementById('current-offset').textContent = result.offset.toFixed(2);
-            document.getElementById('calibrate-btn').disabled = false;
-            setStatus('weight-status', '영점 성공!', 'success');
-        } else {
-            setStatus('weight-status', `Error: ${result.message}`, 'error');
-        }
-        document.getElementById('tare-btn').disabled = false;
-    }
 
-    async function performWeightCalibrate() {
-        const knownWeight = parseFloat(document.getElementById('known-weight').value);
-        if (isNaN(knownWeight) || knownWeight <= 0) { setStatus('weight-status', 'Enter a valid weight.', 'error'); return; }
-        setStatus('weight-status', `Calibrating with ${knownWeight}g...`, 'info');
-        document.getElementById('calibrate-btn').disabled = true;
-        const result = await performApiAction('tare');
-        if (result.status === 'success') {
-            const scale = (result.offset - calibrationState.weight_offset) / knownWeight;
-            if (scale === 0) { setStatus('weight-status', 'Calibration failed: scale is zero.', 'error'); } 
-            else {
-                calibrationState.weight_scale = scale;
-                document.getElementById('current-scale').textContent = scale.toFixed(4);
-                setStatus('weight-status', 'Calibration successful!', 'success');
-            }
-        } else {
-            setStatus('weight-status', `Error: ${result.message}`, 'error');
+    async function performWeightCalibrate(point) {
+        const weightValue = parseFloat(document.getElementById(`weight-val-${point}`).value);
+        if (isNaN(weightValue)) { 
+            setStatus('weight-status', `Point ${point} 무게 값이 유효하지 않습니다.`, 'error'); 
+            return; 
         }
-        document.getElementById('calibrate-btn').disabled = false;
-    }
+        setStatus('weight-status', `Raw 값을 읽는 중입니다 (Point ${point})...`, 'info');
+        document.getElementById(`weight-cal-btn-${point}`).disabled = true;
+        
+        // 'tare' 액션은 raw 값을 반환하는 API 콜입니다. (views.py에서 설정됨)
+        const result = await performApiAction('tare'); 
+        
+        if (result.status === 'success') {
+            // calibrationState에 pH/EC와 동일한 방식으로 저장합니다.
+            calibrationState[`weight_point${point}_raw`] = result.offset; // 'offset' 키에 raw 값이 담겨옴
+            calibrationState[`weight_point${point}_value`] = weightValue;
+            document.getElementById(`weight-raw-${point}`).textContent = result.offset.toFixed(2);
+            setStatus('weight-status', `Raw 값 (Point ${point})이 기록되었습니다.`, 'success');
+        } else {
+            setStatus('weight-status', `Error: ${result.message}`, 'error');
+        }
+        document.getElementById(`weight-cal-btn-${point}`).disabled = false;
+    }
 
     async function performPhCalibrate(point) {
         const phValue = parseFloat(document.getElementById(`ph-val-${point}`).value);
@@ -1133,42 +1126,95 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error("Server error.");
             const data = await response.json();
             calibrationState = data;
-            document.getElementById('current-offset').textContent = data.weight_offset.toFixed(2);
-            document.getElementById('current-scale').textContent = data.weight_scale.toFixed(4);
-            document.getElementById('ph-val-1').value = data.ph_point1_value.toFixed(1);
-            document.getElementById('ph-volt-1').textContent = data.ph_point1_voltage.toFixed(4);
-            document.getElementById('ph-val-2').value = data.ph_point2_value.toFixed(1);
-            document.getElementById('ph-volt-2').textContent = data.ph_point2_voltage.toFixed(4);
-            document.getElementById('current-ph-slope').textContent = data.ph_slope.toFixed(4);
-            document.getElementById('current-ph-intercept').textContent = data.ph_intercept.toFixed(4);
-            document.getElementById('ec-val-1').value = data.ec_point1_value.toFixed(0);
-            document.getElementById('ec-volt-1').textContent = data.ec_point1_voltage.toFixed(4);
-            document.getElementById('ec-val-2').value = data.ec_point2_value.toFixed(0);
-            document.getElementById('ec-volt-2').textContent = data.ec_point2_voltage.toFixed(4);
-            document.getElementById('current-ec-slope').textContent = data.ec_slope.toFixed(4);
-            document.getElementById('current-ec-intercept').textContent = data.ec_intercept.toFixed(4);
+            
+            // --- Weight ---
+            document.getElementById('current-weight-slope').textContent = data.weight_slope ? data.weight_slope.toFixed(6) : 'N/A';
+            document.getElementById('current-weight-intercept').textContent = data.weight_intercept ? data.weight_intercept.toFixed(2) : 'N/A';
+            document.getElementById('weight-val-1').value = data.weight_point1_value ? data.weight_point1_value.toFixed(0) : '0';
+            document.getElementById('weight-raw-1').textContent = data.weight_point1_raw ? data.weight_point1_raw.toFixed(2) : '...';
+            document.getElementById('weight-val-2').value = data.weight_point2_value ? data.weight_point2_value.toFixed(0) : '1000';
+            document.getElementById('weight-raw-2').textContent = data.weight_point2_raw ? data.weight_point2_raw.toFixed(2) : '...';
+
+            // --- pH ---
+            document.getElementById('ph-val-1').value = data.ph_point1_value ? data.ph_point1_value.toFixed(1) : '7.0';
+            document.getElementById('ph-volt-1').textContent = data.ph_point1_voltage ? data.ph_point1_voltage.toFixed(4) : '...';
+            document.getElementById('ph-val-2').value = data.ph_point2_value ? data.ph_point2_value.toFixed(1) : '4.0';
+            document.getElementById('ph-volt-2').textContent = data.ph_point2_voltage ? data.ph_point2_voltage.toFixed(4) : '...';
+            document.getElementById('current-ph-slope').textContent = data.ph_slope ? data.ph_slope.toFixed(4) : 'N/A';
+            document.getElementById('current-ph-intercept').textContent = data.ph_intercept ? data.ph_intercept.toFixed(4) : 'N/A';
+
+            // --- EC ---
+            document.getElementById('ec-val-1').value = data.ec_point1_value ? data.ec_point1_value.toFixed(0) : '700';
+            document.getElementById('ec-volt-1').textContent = data.ec_point1_voltage ? data.ec_point1_voltage.toFixed(4) : '...';
+            document.getElementById('ec-val-2').value = data.ec_point2_value ? data.ec_point2_value.toFixed(0) : '1500';
+            document.getElementById('ec-volt-2').textContent = data.ec_point2_voltage ? data.ec_point2_voltage.toFixed(4) : '...';
+            document.getElementById('current-ec-slope').textContent = data.ec_slope ? data.ec_slope.toFixed(4) : 'N/A';
+            document.getElementById('current-ec-intercept').textContent = data.ec_intercept ? data.ec_intercept.toFixed(4) : 'N/A';
 
         } catch(error) {
-            console.error("Could not load settings", error);
+            console.error("설정을 로딩할 수 없었습니다", error);
             setStatus('save-status', 'Could not load settings from server.', 'error');
         }
     }
 
     async function saveSettings() {
-        setStatus('save-status', 'Saving...', 'info');
-        try {
-            const response = await fetchWithTimeout('/settings_api/', { method: 'POST', body: JSON.stringify(calibrationState) });
-            const result = await response.json();
-            if (response.ok) {
-                setStatus('save-status', 'Settings saved successfully!', 'success');
-                loadSettings();
-            } else {
-                setStatus('save-status', `Error: ${result.message || 'Server error'}`, 'error');
-            }
-        } catch (error) {
-             setStatus('save-status', 'Save failed. Network error or timeout.', 'error');
-        }
-    }
+        setStatus('save-status', 'Saving...', 'info');
+        
+        // --- 계산 로직 시작 ---
+        function calculateLinearFit(p1_raw, p1_val, p2_raw, p2_val) {
+            // m = (y2 - y1) / (x2 - x1)
+            const slope = (p2_val - p1_val) / (p2_raw - p1_raw);
+            // b = y1 - (m * x1)
+            const intercept = p1_val - (slope * p1_raw);
+            return { slope, intercept };
+        }
+
+        // 1. pH 계산
+        if (calibrationState.ph_point1_voltage && calibrationState.ph_point2_voltage) {
+            const fit = calculateLinearFit(
+                calibrationState.ph_point1_voltage, calibrationState.ph_point1_value,
+                calibrationState.ph_point2_voltage, calibrationState.ph_point2_value
+            );
+            calibrationState.ph_slope = fit.slope;
+            calibrationState.ph_intercept = fit.intercept;
+        }
+
+        // 2. EC 계산
+        if (calibrationState.ec_point1_voltage && calibrationState.ec_point2_voltage) {
+            const fit = calculateLinearFit(
+                calibrationState.ec_point1_voltage, calibrationState.ec_point1_value,
+                calibrationState.ec_point2_voltage, calibrationState.ec_point2_value
+            );
+            calibrationState.ec_slope = fit.slope;
+            calibrationState.ec_intercept = fit.intercept;
+        }
+
+        // 3. 무게(Weight) 계산
+        if (calibrationState.weight_point1_raw && calibrationState.weight_point2_raw) {
+            const fit = calculateLinearFit(
+                calibrationState.weight_point1_raw, calibrationState.weight_point1_value,
+                calibrationState.weight_point2_raw, calibrationState.weight_point2_value
+            );
+            calibrationState.weight_slope = fit.slope;
+            calibrationState.weight_intercept = fit.intercept;
+        }
+        // --- 계산 로직 끝 ---
+
+        try {
+            // 계산된 m, b 값이 포함된 calibrationState를 서버로 전송
+            const response = await fetchWithTimeout('/settings_api/', { method: 'POST', body: JSON.stringify(calibrationState) });
+            const result = await response.json();
+            if (response.ok) {
+                setStatus('save-status', 'Settings saved successfully!', 'success');
+                // UI에 계산된 m, b 값을 즉시 반영하기 위해 loadSettings() 호출
+                loadSettings(); 
+            } else {
+                setStatus('save-status', `Error: ${result.message || 'Server error'}`, 'error');
+            }
+        } catch (error) {
+             setStatus('save-status', 'Save failed. Network error or timeout.', 'error');
+        }
+    }
 
     // --- Initial Load ---
     updateLatestData();
