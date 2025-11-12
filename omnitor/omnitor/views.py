@@ -86,14 +86,20 @@ def settings_api(request):
 
     if request.method == 'GET':
         data = {
-            'weight_offset': settings.weight_offset,
-            'weight_scale': settings.weight_scale,
+            'weight_point1_raw': settings.weight_point1_raw,
+            'weight_point1_value': settings.weight_point1_value,
+            'weight_point2_voltage': settings.weight_point2_raw,
+            'weight_point2_value': settings.weight_point2_value,
+            'weight_slope': settings.weight_slope,
+            'weight_intercept': settings.weight_intercept,
+            
             'ph_point1_voltage': settings.ph_point1_voltage,
             'ph_point1_value': settings.ph_point1_value,
             'ph_point2_voltage': settings.ph_point2_voltage,
             'ph_point2_value': settings.ph_point2_value,
             'ph_slope': settings.ph_slope,
             'ph_intercept': settings.ph_intercept,
+            
             'ec_point1_voltage': settings.ec_point1_voltage,
             'ec_point1_value': settings.ec_point1_value,
             'ec_point2_voltage': settings.ec_point2_voltage,
@@ -108,7 +114,7 @@ def settings_api(request):
             data = json.loads(request.body)
             changed = False
             for key, value in data.items():
-                if key.endswith('_voltage') or key.endswith('_value') or key.endswith('_offset') or key.endswith('_scale') or key.endswith('_slope') or key.endswith('_intercept'):
+                if key.endswith('_voltage') or key.endswith('_value') or key.endswith('_raw') or key.endswith('_slope') or key.endswith('_intercept'):
                     try:
                         float_value = float(value) if value is not None and value != '' else None
                         if hasattr(settings, key) and getattr(settings, key) != float_value:
@@ -145,10 +151,10 @@ def calibration_api(request):
 
     reading, message = (None, "Invalid action")
 
-    if action == 'tare':
+    if action == 'get_weight_raw':
         reading, message = get_stable_reading_from_arduino(4)
         if reading is not None:
-            return JsonResponse({'status': 'success', 'offset': reading})
+            return JsonResponse({'status': 'success', 'raw': reading})
 
     elif action == 'get_ph_voltage':
         reading, message = get_stable_reading_from_arduino(5)
