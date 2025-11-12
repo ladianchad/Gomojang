@@ -88,7 +88,7 @@ def settings_api(request):
         data = {
             'weight_point1_raw': settings.weight_point1_raw,
             'weight_point1_value': settings.weight_point1_value,
-            'weight_point2_voltage': settings.weight_point2_raw,
+            'weight_point2_raw': settings.weight_point2_raw,
             'weight_point2_value': settings.weight_point2_value,
             'weight_slope': settings.weight_slope,
             'weight_intercept': settings.weight_intercept,
