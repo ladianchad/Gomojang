@@ -50,8 +50,12 @@ class CalibrationSettings(models.Model):
     id = models.IntegerField(primary_key=True, default=1, editable=False)
 
     # Weight settings
-    weight_offset = models.FloatField(default=0.0)
-    weight_scale = models.FloatField(default=1.0)
+    weight_point1_raw = models.FloatField(default=20000)
+    weight_point1_value = models.FloatField(default=0)
+    weight_point2_raw = models.FloatField(default=40000)
+    weight_point2_value = models.FloatField(default=2000)
+    weight_slope = models.FloatField(default=-21.5)
+    weight_intercept = models.FloatField(default=20000)
     
     # pH two-point calibration data
     ph_point1_voltage = models.FloatField(default=2.5)
