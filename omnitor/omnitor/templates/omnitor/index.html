@@ -1072,7 +1072,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById(`weight-cal-btn-${point}`).disabled = true;
         
         // 'tare' 액션은 raw 값을 반환하는 API 콜입니다. (views.py에서 설정됨)
-        const result = await performApiAction('tare'); 
+        const result = await performApiAction('get_weight_raw'); 
         
         if (result.status === 'success') {
             // calibrationState에 pH/EC와 동일한 방식으로 저장합니다.
