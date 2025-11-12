@@ -77,7 +77,7 @@ class Command(BaseCommand):
                 calibrated_data = {}
                 
                 # Weight calibration
-                calibrated_data['weight_calibrated'] = (smoothed_raw_data['weight_raw'] - settings.weight_offset) / settings.weight_scale if settings.weight_scale != 0 else 0
+                calibrated_data['weight_calibrated'] = (smoothed_raw_data['weight_raw'] * settings.weight_slope) + settings.weight_intercept if settings.weight_slope is not None and settings.weight_intercept is not None else 0
 
                 # pH Calibration (2-point + temperature compensation)
                 base_ph = (smoothed_raw_data['ph_voltage'] * settings.ph_slope) + settings.ph_intercept
