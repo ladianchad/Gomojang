@@ -27,6 +27,10 @@ class SensorData(models.Model):
     # Weight
     weight_raw = models.FloatField(null=True, blank=True)
     weight_calibrated = models.FloatField(null=True, blank=True)
+
+    #Tipping gauge
+    tip_count = models.FloatField(null=True, blank=True)
+    tip_total = models.FloatField(null=True, blank=True)
     
     # pH
     ph_voltage = models.FloatField(null=True, blank=True)
