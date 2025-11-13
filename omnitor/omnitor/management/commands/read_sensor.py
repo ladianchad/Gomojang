@@ -16,6 +16,7 @@ MODBUS_ADDRESS = 1
 MOVING_AVERAGE_WINDOW = 5 # Number of data points to average
 SAVE_INTERVAL_SECONDS = 60 # Save data every 60 seconds
 LOOP_SLEEP_SECONDS = 0.1 # Reads sensor data every 0.1 sec
+tip_capacity = 5 # Tipping gauge water capacity = 5mL
 
 class Command(BaseCommand):
     help = 'Reads data from Arduino and Modbus, applies a moving average filter and calibration, and saves to the database every 60 seconds.'
@@ -32,7 +33,6 @@ class Command(BaseCommand):
             'ph_voltage': deque(maxlen=MOVING_AVERAGE_WINDOW),
             'ec_voltage': deque(maxlen=MOVING_AVERAGE_WINDOW),
             'water_temperature': deque(maxlen=MOVING_AVERAGE_WINDOW),
-            'tp_count' : deque(maxlen=MOVING_AVERAGE_WINDOW),
             'soil_humidity': deque(maxlen=MOVING_AVERAGE_WINDOW),
             'soil_temperature': deque(maxlen=MOVING_AVERAGE_WINDOW),
             'soil_conductivity': deque(maxlen=MOVING_AVERAGE_WINDOW),
@@ -57,9 +57,10 @@ class Command(BaseCommand):
     def parse_arduino_data(self, serial_line, settings):
         """
         Parses a comma-separated line from Arduino, applies smoothing and all calibrations.
-        Format: "AirTemp,AirHum,CO2,Insolation,Weight_Raw,pH_V,EC_V,WaterTemp,TpCount"
+        Format: "AirTemp,AirHum,CO2,Insolation,Weight_Raw,pH_V,EC_V,WaterTemp,TipCount"
         """
         try:
+            self.stdout.write(f"[Arduino RAW]: {serial_line.strip()}")
             parts = serial_line.strip().split(',')
             if len(parts) == 9:
                 raw_data = {
@@ -71,9 +72,10 @@ class Command(BaseCommand):
                     'ph_voltage': float(parts[5]),
                     'ec_voltage': float(parts[6]),
                     'water_temperature': float(parts[7]),
-                    'tp_count': float(parts[8]),
                 }
 
+                tip_count = float(parts[8])
+                
                 # Apply moving average filter to raw data first
                 smoothed_raw_data = self.apply_smoothing(raw_data)
                 calibrated_data = {}
@@ -81,6 +83,10 @@ class Command(BaseCommand):
                 # Weight calibration
                 calibrated_data['weight_calibrated'] = (smoothed_raw_data['weight_raw'] * settings.weight_slope) + settings.weight_intercept if settings.weight_slope is not None and settings.weight_intercept is not None else 0
 
+                # Calculate tipping gauge total volume of water
+                calibrated_data['tip_total'] = tip_count * tip_capacity
+                smoothed_data['tip_count'] = tip_count
+                
                 # pH Calibration (2-point + temperature compensation)
                 base_ph = (smoothed_raw_data['ph_voltage'] * settings.ph_slope) + settings.ph_intercept
                 temp_diff = smoothed_raw_data['water_temperature'] - 25.0
@@ -109,6 +115,7 @@ class Command(BaseCommand):
         """Reads data from the Modbus soil sensor and applies smoothing."""
         try:
             data = instrument.read_registers(0, 4, 3)
+            self.stdout.write(f"[Modbus RAW]: {data}")
             raw_soil_data = {
                 'soil_humidity': data[0] / 10.0,
                 'soil_temperature': data[1] / 10.0,
@@ -145,7 +152,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f"\nStarting data reception. Saving to DB every {SAVE_INTERVAL_SECONDS} seconds. Press Ctrl+C to exit."))
         
-        self.last_save_time = time.time() # 저장 타이머 초기화
+        self.last_save_time = time.time() # reset save timer
 
         while True:
             try:
@@ -165,52 +172,64 @@ class Command(BaseCommand):
                         if soil_data:
                             all_data.update(soil_data)
                         
-                        # 가장 최신의 평활화된 데이터를 클래스 변수에 저장
+                        # save latest smoothed data to class variable
                         self.latest_smoothed_data = all_data 
 
-                # --- 1분마다 저장하는 로직 ---
+                # --- save data every 1 min ---
                 current_time = time.time()
                 if (current_time - self.last_save_time) >= SAVE_INTERVAL_SECONDS:
                     if self.latest_smoothed_data:
                         try:
-                            # --- [수정됨] ---
-                            # 값을 DB에 저장하기 전에 0 미만인지 확인합니다.
-                            # .get(key) or 0 : 키가 없거나 값이 None이면 0을 사용합니다.
-                            # max(0, ...): 계산된 값이 0보다 작으면 0을 사용합니다.
+                            # if value is less than 0, just make it 0
+                            data_to_save = {}
+                            for key, value in self.latest_smoothed_data.items():
+                                val = self.latest_smoothed_data.get(key)
+                                if isinstance(val, (int, float)):
+                                    # Don't apply max(0) to temperatures
+                                    if 'temperature' in key:
+                                        data_to_save[key] = val
+                                    else:
+                                        data_to_save[key] = max(0, val or 0)
+                                else:
+                                    data_to_save[key] = val
+                            
                             SensorData.objects.create(
-                                air_temperature=max(0, self.latest_smoothed_data.get('air_temperature') or 0),
-                                air_humidity=max(0, self.latest_smoothed_data.get('air_humidity') or 0),
-                                co2=max(0, self.latest_smoothed_data.get('co2') or 0),
-                                insolation=max(0, self.latest_smoothed_data.get('insolation') or 0),
-                                water_temperature=max(0, self.latest_smoothed_data.get('water_temperature') or 0),
-                                weight_raw=max(0, self.latest_smoothed_data.get('weight_raw') or 0),
-                                weight_calibrated=max(0, self.latest_smoothed_data.get('weight_calibrated') or 0),
-                                ph_voltage=max(0, self.latest_smoothed_data.get('ph_voltage') or 0),
-                                ph_calibrated=max(0, self.latest_smoothed_data.get('ph_calibrated') or 0),
-                                ec_voltage=max(0, self.latest_smoothed_data.get('ec_voltage') or 0),
-                                ec_calibrated=max(0, self.latest_smoothed_data.get('ec_calibrated') or 0),
-                                tp_count=max(0, self.latest_smoothed_data.get('tp_count') or 0),
-                                soil_temperature=max(0, self.latest_smoothed_data.get('soil_temperature') or 0),
-                                soil_humidity=max(0, self.latest_smoothed_data.get('soil_humidity') or 0),
-                                soil_conductivity=max(0, self.latest_smoothed_data.get('soil_conductivity') or 0),
-                                soil_ph=max(0, self.latest_smoothed_data.get('soil_ph') or 0),
+                                air_temperature=data_to_save.get('air_temperature'),
+                                air_humidity=data_to_save.get('air_humidity'),
+                                co2=data_to_save.get('co2'),
+                                insolation=data_to_save.get('insolation'),
+                                water_temperature=data_to_save.get('water_temperature'),
+                                weight_raw=data_to_save.get('weight_raw'),
+                                weight_calibrated=data_to_save.get('weight_calibrated'),
+                                ph_voltage=data_to_save.get('ph_voltage'),
+                                ph_calibrated=data_to_save.get('ph_calibrated'),
+                                ec_voltage=data_to_save.get('ec_voltage'),
+                                ec_calibrated=data_to_save.get('ec_calibrated'),
+                                tip_count=data_to_save.get('tip_count'),
+                                tip_total=data_to_save.get('tip_total'),
+                                soil_temperature=data_to_save.get('soil_temperature'),
+                                soil_humidity=data_to_save.get('soil_humidity'),
+                                soil_conductivity=data_to_save.get('soil_conductivity'),
+                                soil_ph=data_to_save.get('soil_ph'),
                             )
+                            self.stdout.write(self.style.SUCCESS(log_msg))
+                            
                             self.stdout.write(self.style.SUCCESS(f"Saved 1-minute data at {time.strftime('%Y-%m-%d %H:%M:%S')}"))
                             
-                            # 저장 후, 다음 1분간의 데이터를 기다리기 위해 초기화
+                            # reset for next data
                             self.latest_smoothed_data = None
                         
                         except Exception as db_e:
                             self.stderr.write(self.style.ERROR(f"Database save error: {db_e}"))
                     
                     else:
-                        # 지난 1분 동안 수집된 데이터가 없음
+                        # if there is no new data read in the last 1 min
                         self.stdout.write(self.style.WARNING(f"No new sensor data read in the last minute. Skipping save."))
 
-                    # 타이머 리셋
+                    # reset timer
                     self.last_save_time = current_time 
                 
-                # 루프가 CPU를 100% 사용하지 않도록 짧은 대기 시간
+                # loop to not use CPU 100%
                 time.sleep(LOOP_SLEEP_SECONDS) 
 
             except KeyboardInterrupt:
