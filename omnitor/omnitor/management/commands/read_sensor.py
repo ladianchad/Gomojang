@@ -92,6 +92,15 @@ class Command(BaseCommand):
                 }
 
                 tip_count = float(parts[8])
+
+                import json
+                state_file_path = '/tmp/sensor_state.json' # 리눅스 임시 폴더 사용
+                
+                try:
+                    with open(state_file_path, 'w') as f:
+                        json.dump(raw_data, f)
+                except Exception as e:
+                    self.stdout.write(f"Error writing state file: {e}")
                 
                 # Apply moving average filter to raw data first
                 smoothed_raw_data = self.apply_smoothing(raw_data)
