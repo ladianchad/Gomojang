@@ -40,6 +40,7 @@ class Command(BaseCommand):
         }
         self.last_save_time = 0.0
         self.latest_smoothed_data = None
+        self.last_tip_count = None
 
     def apply_smoothing(self, data_dict):
         """Applies a moving average to new data and returns the smoothed values."""
@@ -84,7 +85,22 @@ class Command(BaseCommand):
                 calibrated_data['weight_calibrated'] = (smoothed_raw_data['weight_raw'] * settings.weight_slope) + settings.weight_intercept if settings.weight_slope is not None and settings.weight_intercept is not None else 0
 
                 # Calculate tipping gauge total volume of water
-                calibrated_data['tip_total'] = tip_count * tip_capacity
+                irrigation_volume = 0.0
+                
+                if self.last_tip_count is not None:
+                    diff = tip_count - self.last_tip_count
+                    if diff < 0: 
+                        # 아두이노가 재부팅되어 카운트가 0으로 초기화된 경우, 현재 값만큼을 배액량으로 간주
+                        irrigation_volume = tip_count * tip_capacity
+                    else:
+                        # 정상적인 경우 (증가량 * 1회당 부피)
+                        irrigation_volume = diff * tip_capacity
+                
+                # 현재 카운트를 '이전 카운트'로 저장 (다음 루프를 위해)
+                self.last_tip_count = tip_count
+                
+                # 계산된 1분간의 배액량을 저장
+                calibrated_data['tip_total'] = irrigation_volume
                 smoothed_data['tip_count'] = tip_count
                 
                 # pH Calibration (2-point + temperature compensation)
@@ -172,8 +188,11 @@ class Command(BaseCommand):
                         if soil_data:
                             all_data.update(soil_data)
                         
+                        if 'tip_total' in arduino_data:
+                             all_data['tip_total'] = arduino_data['tip_total']
+
                         # save latest smoothed data to class variable
-                        self.latest_smoothed_data = all_data 
+                        self.latest_smoothed_data = all_data
 
                 # --- save data every 1 min ---
                 current_time = time.time()
