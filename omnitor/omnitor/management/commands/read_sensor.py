@@ -4,12 +4,12 @@ import serial
 import time
 import math
 import minimalmodbus
+import serial.tools.list_ports
 from collections import deque
 from django.core.management.base import BaseCommand
 from omnitor.models import SensorData, CalibrationSettings
 
 # --- Settings ---
-ARDUINO_PORT = '/dev/ttyACM0'
 BAUDRATE = 9600
 MODBUS_PORT = '/dev/ttyUSB0'
 MODBUS_ADDRESS = 1
@@ -17,6 +17,22 @@ MOVING_AVERAGE_WINDOW = 5 # Number of data points to average
 SAVE_INTERVAL_SECONDS = 60 # Save data every 60 seconds
 LOOP_SLEEP_SECONDS = 0.1 # Reads sensor data every 0.1 sec
 tip_capacity = 5 # Tipping gauge water capacity = 5mL
+
+def find_arduino_port():
+    """
+    연결된 시리얼 포트들을 검색해서 Arduino가 포함된 포트 경로를 반환합니다.
+    못 찾으면 기본값 '/dev/ttyACM0'를 반환합니다.
+    """
+    ports = serial.tools.list_ports.comports()
+    
+    for port in ports:
+        if "Arduino" in port.description:
+            return port.device
+
+        if "ACM" in port.device:
+            return port.device
+            
+    return '/dev/ttyACM0'
 
 class Command(BaseCommand):
     help = 'Reads data from Arduino and Modbus, applies a moving average filter and calibration, and saves to the database every 60 seconds.'
@@ -147,8 +163,11 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         self.stdout.write(self.style.SUCCESS("Initializing sensors..."))
 
+        found_port = find_arduino_port()
+        self.stdout.write(f"Detected Arduino port: {found_port}")
+        
         try:
-            arduino_ser = serial.Serial(ARDUINO_PORT, BAUDRATE, timeout=1)
+            arduino_ser = serial.Serial(found_port, BAUDRATE, timeout=1)
             time.sleep(2)
             arduino_ser.reset_input_buffer()
             self.stdout.write(self.style.SUCCESS(f"Success: Connected to Arduino on {ARDUINO_PORT}."))
