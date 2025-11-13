@@ -203,10 +203,10 @@
             </div>
         </div>
         
-        <h3>무게 & 배액</h3>
+        <h3>무게 & 배액량</h3>
         <div class="data-grid">
             <div class="data-card">
-                <div class="label">무게</div>
+                <div class="label">총 무게</div>
                 <div class="progress-circle-container">
                     <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
                         <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
@@ -217,6 +217,34 @@
                     </svg>
                 </div>
             </div>
+            <div class="data-card">
+                <div class="label">급수량</div>
+                <div class="progress-circle-container">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
+                        <circle id="inner-irrigation_amount" r="71" cx="91" cy="91" fill="#E8F5E9"></circle>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-irrigation_amount" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-irrigation_amount">-</text>
+                        <text class="progress-unit" x="66" y="160">mL</text>
+                    </svg>
+                </div>
+            </div>
+            <div class="data-card">
+                <div class="label">배액량</div>
+                <div class="progress-circle-container">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
+                        <circle id="inner-tip_total" r="71" cx="91" cy="91" fill="#E8F5E9"></circle>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-tip_total" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-tip_total">-</text>
+                        <text class="progress-unit" x="66" y="160">mL</text>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <h3>배액 수온, pH, EC</h3>
+        <div class="data-grid">
             <div class="data-card">
                 <div class="label">수온</div>
                 <div class="progress-circle-container">
@@ -622,8 +650,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             document.getElementById('latest-timestamp').textContent = data.timestamp;
             
-            // --- Define Min/Max ranges for your progress bars ---
-            // !!! You should adjust these values to fit your farm !!!
+            // !!! 최소 최대 설정 필요 !!!
             const sensorConfig = {
                 'air_temperature': { min: -20, max: 80, defaultColor: '#73E866', defcircleColor: '#E8F5E9' },
                 'air_humidity': { min: 0, max: 100, defaultColor: '#73E866', defcircleColor: '#E8F5E9' },
@@ -637,6 +664,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 'soil_humidity': { min: 0, max: 100, defaultColor: '#73E866', defcircleColor: '#E8F5E9' },
                 'soil_conductivity': { min: 0, max: 5000, defaultColor: '#73E866', defcircleColor: '#E8F5E9' },
                 'soil_ph': { min: 0, max: 14, defaultColor: '#73E866', defcircleColor: '#E8F5E9' }
+                'irrigation_amount': { min: 0, max: 1000, defaultColor: '#33A5FF', defcircleColor: '#E1F5FE' },
+                'tip_total': { min: 0, max: 5000, defaultColor: '#FF9F40', defcircleColor: '#FFF3E0' }
             };
 
             // Loop through the config and update each circle
@@ -701,7 +730,7 @@ document.addEventListener('DOMContentLoaded', () => {
             maintainAspectRatio: false 
         };
         
-        // --- 모든 차트에 공통으로 적용될 x축 옵션 ---
+        // --- common X axis settings ---
         const commonXAxis = {
             type: 'time',
             time: {
@@ -717,14 +746,21 @@ document.addEventListener('DOMContentLoaded', () => {
         charts.weight = createChart('weightChart', { 
             type: 'line', 
             data: { 
-                datasets: [{ label: '무게 (g)', data: [], borderColor: '#8e5ea2', fill: false }] 
+                datasets: [
+                    { label: '총 무게 (g)', data: [], borderColor: '#8e5ea2', yAxisID: 'y_weight', fill: false },
+                    { label: '급수량 (mL)', data: [], borderColor: '#33A5FF', yAxisID: 'y_vol', fill: false, borderDash: [5, 5] }, // 점선
+                    { label: '배액량 (mL)', data: [], borderColor: '#FF9F40', yAxisID: 'y_vol', fill: false }
+                ] 
             }, 
             options: { 
                 ...commonOptions, 
-                title: { display: true, text: '무게' }, 
+                title: { display: true, text: '무게 및 수분량' }, 
                 scales: { 
-                    yAxes: [{ ticks: { suggestedMin: 0 } }],
-                    xAxes: [commonXAxis] // x축 옵션 적용
+                    yAxes: [
+                        { id: 'y_weight', type: 'linear', position: 'left', ticks: { fontColor: '#8e5ea2', suggestedMin: 0 } },
+                        { id: 'y_vol', type: 'linear', position: 'right', ticks: { fontColor: '#33A5FF', suggestedMin: 0 }, gridLines: { drawOnChartArea: false } }
+                    ],
+                    xAxes: [commonXAxis] 
                 } 
             } 
         });
@@ -827,7 +863,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log(`Fetching data for timespan: ${selectedOption}`);
         }
         
-        setStatus('graph-status', 'Loading graph data...', 'info');
+        setStatus('graph-status', '그래프 데이터 로딩중...', 'info');
 
         try {
             const response = await fetchWithTimeout(apiUrl + queryParams);
@@ -839,7 +875,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // --- labels가 아닌 datasets를 확인 ---
             if (!data || !data.datasets || !data.labels || data.labels.length === 0) {
-                setStatus('graph-status', 'No data found for the selected range.', 'info');
+                setStatus('graph-status', '데이터가 없습니.', 'info');
                 Object.values(charts).forEach(chart => {
                     chart.data.datasets.forEach(dataset => dataset.data = []); // 데이터만 비움
                     chart.update();
@@ -859,7 +895,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             const map = {
-                weight: { chart: charts.weight, datasets: [data.datasets.weight] },
+                weight: { chart: charts.weight, datasets: [data.datasets.weight, data.datasets.irrigation, data.datasets.tip_total] },
                 env: { chart: charts.env, datasets: [data.datasets.air_temperature, data.datasets.air_humidity, data.datasets.co2, data.datasets.insolation] },
                 water: { chart: charts.water, datasets: [data.datasets.ph, data.datasets.ec, data.datasets.water_temperature] },
                 soil: { chart: charts.soil, datasets: [data.datasets.soil_temperature, data.datasets.soil_humidity, data.datasets.soil_conductivity, data.datasets.soil_ph] }
