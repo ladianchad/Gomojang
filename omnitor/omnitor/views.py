@@ -177,6 +177,17 @@ def sensor_dashboard_view(request):
 def latest_data_api(request):
     try:
         latest = SensorData.objects.latest('timestamp')
+        
+        prev = SensorData.objects.filter(timestamp__lt=latest.timestamp).order_by('-timestamp').first()
+        
+        # 급수량 계산 (현재 무게 - 이전 무게)
+        # 0보다 클 때만 급수량으로 인정 (무게가 줄어드는 건 증발/배액이므로 제외)
+        irrigation_amount = 0
+        if prev and latest.weight_calibrated is not None and prev.weight_calibrated is not None:
+            diff = latest.weight_calibrated - prev.weight_calibrated
+            if diff > 0:
+                irrigation_amount = diff
+        
         data = {
             'timestamp': latest.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
             'air_temperature': latest.air_temperature,
@@ -185,6 +196,7 @@ def latest_data_api(request):
             'insolation': latest.insolation,
             'water_temperature': latest.water_temperature,
             'tip_total': latest.tip_total,
+            'irrigation_amount': irrigation_amount,
             'weight_calibrated': latest.weight_calibrated,
             'ph_calibrated': latest.ph_calibrated,
             'ec_calibrated': latest.ec_calibrated,
@@ -195,10 +207,10 @@ def latest_data_api(request):
         }
         return JsonResponse(data)
     except SensorData.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'No data available.'}, status=404)
+        return JsonResponse({'status': 'error', 'message': '데이터가 없습니다.'}, status=404)
     except Exception as e:
         print(f"Error in latest_data_api: {e}")
-        return JsonResponse({'status': 'error', 'message': 'Server error fetching latest data.'}, status=500)
+        return JsonResponse({'status': 'error', 'message': '서버 에러!!!'}, status=500)
 def historical_data_api(request):
     start_date_str = request.GET.get('start_date')
     end_date_str = request.GET.get('end_date')
@@ -223,17 +235,59 @@ def historical_data_api(request):
             start_time = end_time - timedelta(hours=1)
             print(f"Warning: No time range specified, defaulting to last 1 hour.")
     except ValueError:
-        return JsonResponse({'status': 'error', 'message': 'Invalid date format. Use YYYY-MM-DD.'}, status=400)
+        return JsonResponse({'status': 'error', 'message': '날짜 포멧이 틀렸습니다. 연연연연-월월-일일을 사용하세요           'insolation': latest.insolation,
+            'water_temperature': latest.water_temperature,
+            'tip_total': latest.tip_total,
+            'irrigation_amount': irrigation_amount,
+            'weight_calibrated': latest.weight_calibrated,
+            'ph_calibrated': latest.ph_calibrated,
+            'ec_calibrated': latest.ec_calibrated,
+            'soil_temperature': latest.soil_temperature,
+            'soil_humidity': latest.soil_humidity,
+            'soil_conductivity': latest.soil_conductivity,
+            'soil_ph': latest.soil_ph,
+        }
+        return JsonResponse(data)
+    except SensorData.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': '데이터가 없습니다.'}, status=404)
+    except Exception as e:
+        print(f"Error in latest_data_api: {e}")
+        return JsonResponse({'status': 'error', 'message': '서버 에러!!!'}, status=500)
+def historical_data_api(request):
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
+    timespan = request.GET.get('timespan', None)
+    end_time = timezone.now()
+    start_time = None
+
+    try:
+        if start_date_str and end_date_str:
+            start_time = timezone.make_aware(datetime.strptime(start_date_str, '%Y-%m-%d'))
+            end_dt_naive = datetime.strptime(end_date_str, '%Y-%m-%d') + timedelta(days=1, microseconds=-1)
+            end_time = timezone.make_aware(end_dt_naive)
+            print(f"Date range selected: {start_time} to {end_time}")
+        elif timespan:
+            if timespan == '10m': start_time = end_time - timedelta(minutes=10)
+            elif timespan == '1h': start_time = end_time - timedelta(hours=1)
+            elif timespan == '24h': start_time = end_time - timedelta(hours=24)
+            elif timespan == '7d': start_time = end_time - timedelta(days=7)
+            else: start_time = end_time - timedelta(hours=1); print(f"Warning: Invalid timespan, defaulting to 1h.")
+            print(f"Timespan selected: {timespan}, range: {start_time} to {end_time}")
+        else:
+            start_time = end_time - timedelta(hours=1)
+            print(f"시간 범위를 선택하지 않아 기본인 최근 1시간 단위로 표시합니다.")
+    except ValueError:
+        return JsonResponse({'status': 'error', 'message': '날짜 형식이 틀렸습니다. 연연연연-월월-일일 형식을 사용하세요.'}, status=400)
     except Exception as e:
         print(f"Error parsing date/time parameters: {e}")
-        return JsonResponse({'status': 'error', 'message': 'Error processing date/time parameters.'}, status=500)
+        return JsonResponse({'status': 'error', 'message': '날짜 에러.'}, status=500)
 
     if start_time is None:
-        return JsonResponse({'status': 'error', 'message': 'Could not determine time range.'}, status=400)
+        return JsonResponse({'status': 'error', 'message': '시간 범위를 받지 못했습니다'}, status=400)
     try:
         data_points_qs = SensorData.objects.filter(timestamp__range=(start_time, end_time)).order_by('timestamp')
         count = data_points_qs.count()
-        print(f"Found {count} data points for the selected range.") # Debugging
+        print(f"{count}개의 데이터를 찾았습니다.") # 디버깅용
 
         MAX_GRAPH_POINTS = 500
         data_points = []
