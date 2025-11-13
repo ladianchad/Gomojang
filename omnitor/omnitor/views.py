@@ -6,24 +6,10 @@ from django.conf import settings as django_settings
 from django.contrib.staticfiles.storage import staticfiles_storage
 from .models import SensorData, CalibrationSettings, FarmJournal
 import json
-import serial
-import serial.tools.list_ports
 import time
 import statistics
 import math
 import os
-
-# --- Serial Configuration ---
-BAUD_RATE = 9600
-
-def find_arduino_port():
-    ports = serial.tools.list_ports.comports()
-    for port in ports:
-        if "Arduino" in port.description:
-            return port.device
-        if "ACM" in port.device:
-            return port.device
-    return '/dev/ttyACM0'
 
 # --- Camera Settings Path --
 BASE_DIR_GOMOJANG = os.path.expanduser("~/gomojang/omnitor") 
@@ -44,56 +30,46 @@ def get_current_capture_time():
         return DEFAULT_CAPTURE_TIME
 
 # --- Helper Function for Calibration ---
-def get_stable_reading_from_arduino(data_index):
-    values = []
-    ser = None # Initialize ser to None
-
-    target_port = find_arduino_port() 
-    print(f"Connecting to calibration port: {target_port}")
+def get_reading_from_sensor_file(target_key):
+    """
+    target_key 예시: 'weight_raw', 'ph_voltage', 'ec_voltage'
+    """
+    # read_sensors.py가 저장하는 파일 위치
+    state_file_path = '/tmp/sensor_state.json' 
+    readings = []
     
-    try:
-        if not os.path.exists(SERIAL_PORT):
-            print(f"Error: Serial port {SERIAL_PORT} not found.")
-            return (None, f"Serial port {SERIAL_PORT} not found.")
-
-        ser = serial.Serial(target_port, BAUD_RATE, timeout=1.5)
-        ser.flushInput()
-        sample_count = 0
-        max_samples = 15
-        start_time = time.time()
-
-        while sample_count < max_samples and (time.time() - start_time) < 5:
-            if ser.in_waiting > 0:
-                try:
-                    line = ser.readline().decode('utf-8').strip()
-                    parts = line.split(',')
-                    if len(parts) == 9:
-                        raw_value = float(parts[data_index])
-                        values.append(raw_value)
-                        sample_count += 1
-                except (UnicodeDecodeError, ValueError, IndexError) as e:
-                    print(f"Debug: Error parsing line '{line}': {e}")
-                continue
+    # 파일이 생성되거나 업데이트될 때까지 최대 3초간 시도
+    start_time = time.time()
+    
+    while (time.time() - start_time) < 3:
+        try:
+            if os.path.exists(state_file_path):
+                with open(state_file_path, 'r') as f:
+                    data = json.load(f)
+                    
+                    # 요청한 키(예: 'weight_raw')가 있으면 리스트에 추가
+                    if target_key in data:
+                        readings.append(data[target_key])
+            
+            # 안정적인 값을 위해 5번 정도 읽으면 중앙값 반환
+            if len(readings) >= 5:
+                return (statistics.median(readings), "Success")
+                
+            time.sleep(0.1) # 0.1초 대기 (read_sensors가 0.1초마다 갱신하므로)
+            
+        except (json.JSONDecodeError, IOError):
+            # 파일이 쓰기 중(Lock)이라 읽기 실패할 수 있음 -> 무시하고 재시도
             time.sleep(0.05)
+        except Exception as e:
+            print(f"Error reading state file: {e}")
+            return (None, f"Error: {e}")
 
-        if len(values) < 2: # Require at least 2 valid samples
-            msg = f"Not enough valid data received. Got {len(values)} samples."
-            print(f"Error: {msg}")
-            return (None, msg)
-        
-        return (statistics.median(values), "Success")
-
-    except serial.SerialException as e:
-        msg = f"Serial port error on {target_port}: {e}"
-        print(f"Error: {msg}")
-        return (None, msg)
-    except Exception as e:
-        msg = f"An unexpected error occurred: {e}"
-        print(f"Error: {msg}")
-        return (None, msg)
-    finally:
-        if ser and ser.is_open:
-            ser.close()
+    if not readings:
+        return (None, "Timeout: 센서 데이터 파일(/tmp/sensor_state.json)을 읽을 수 없습니다. read_sensors가 실행 중인가요?")
+    
+    # 5개를 못 채웠더라도 읽은 게 있으면 반환
+    return (statistics.median(readings), "Success")
+    
 def settings_api(request):
     settings = CalibrationSettings.load()
 
@@ -165,17 +141,17 @@ def calibration_api(request):
     reading, message = (None, "Invalid action")
 
     if action == 'get_weight_raw':
-        reading, message = get_stable_reading_from_arduino(4)
+        reading, message = get_reading_from_sensor_file('weight_raw')
         if reading is not None:
             return JsonResponse({'status': 'success', 'raw': reading})
 
     elif action == 'get_ph_voltage':
-        reading, message = get_stable_reading_from_arduino(5)
+        reading, message = get_reading_from_sensor_file('ph_voltage')
         if reading is not None:
             return JsonResponse({'status': 'success', 'voltage': reading})
 
     elif action == 'get_ec_voltage':
-        reading, message = get_stable_reading_from_arduino(6)
+        reading, message = get_reading_from_sensor_file('ec_voltage')
         if reading is not None:
             return JsonResponse({'status': 'success', 'voltage': reading})
 
@@ -184,6 +160,8 @@ def calibration_api(request):
         return JsonResponse({'status': 'error', 'message': detailed_message}, status=500)
 
     return HttpResponseBadRequest("Invalid action specified or failed to execute.")
+
+
 def sensor_dashboard_view(request):
     return render(request, 'omnitor/index.html')
 
