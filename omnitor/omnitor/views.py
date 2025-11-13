@@ -7,14 +7,23 @@ from django.contrib.staticfiles.storage import staticfiles_storage
 from .models import SensorData, CalibrationSettings, FarmJournal
 import json
 import serial
+import serial.tools.list_ports
 import time
 import statistics
 import math
 import os
 
 # --- Serial Configuration ---
-SERIAL_PORT = '/dev/ttyACM0'
 BAUD_RATE = 9600
+
+def find_arduino_port():
+    ports = serial.tools.list_ports.comports()
+    for port in ports:
+        if "Arduino" in port.description:
+            return port.device
+        if "ACM" in port.device:
+            return port.device
+    return '/dev/ttyACM0'
 
 # --- Camera Settings Path --
 BASE_DIR_GOMOJANG = os.path.expanduser("~/gomojang/omnitor") 
@@ -38,12 +47,16 @@ def get_current_capture_time():
 def get_stable_reading_from_arduino(data_index):
     values = []
     ser = None # Initialize ser to None
+
+    target_port = find_arduino_port() 
+    print(f"Connecting to calibration port: {target_port}")
+    
     try:
         if not os.path.exists(SERIAL_PORT):
             print(f"Error: Serial port {SERIAL_PORT} not found.")
             return (None, f"Serial port {SERIAL_PORT} not found.")
 
-        ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1.5)
+        ser = serial.Serial(target_port, BAUD_RATE, timeout=1.5)
         ser.flushInput()
         sample_count = 0
         max_samples = 15
@@ -54,7 +67,7 @@ def get_stable_reading_from_arduino(data_index):
                 try:
                     line = ser.readline().decode('utf-8').strip()
                     parts = line.split(',')
-                    if len(parts) == 8:
+                    if len(parts) == 9:
                         raw_value = float(parts[data_index])
                         values.append(raw_value)
                         sample_count += 1
@@ -71,7 +84,7 @@ def get_stable_reading_from_arduino(data_index):
         return (statistics.median(values), "Success")
 
     except serial.SerialException as e:
-        msg = f"Serial port error: {e}"
+        msg = f"Serial port error on {target_port}: {e}"
         print(f"Error: {msg}")
         return (None, msg)
     except Exception as e:
