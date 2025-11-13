@@ -184,6 +184,7 @@ def latest_data_api(request):
             'co2': latest.co2,
             'insolation': latest.insolation,
             'water_temperature': latest.water_temperature,
+            'tip_total': latest.tip_total,
             'weight_calibrated': latest.weight_calibrated,
             'ph_calibrated': latest.ph_calibrated,
             'ec_calibrated': latest.ec_calibrated,
@@ -257,6 +258,7 @@ def historical_data_api(request):
             'ec': [dp.ec_calibrated if dp.ec_calibrated is not None else None for dp in data_points],
             'ph': [dp.ph_calibrated if dp.ph_calibrated is not None else None for dp in data_points],
             'water_temperature': [dp.water_temperature if dp.water_temperature is not None else None for dp in data_points],
+            'tip_total': [dp.tip_total if dp.tip_total is not None else None for dp in data_points]
             'soil_temperature': [dp.soil_temperature if dp.soil_temperature is not None else None for dp in data_points],
             'soil_humidity': [dp.soil_humidity if dp.soil_humidity is not None else None for dp in data_points],
             'soil_conductivity': [dp.soil_conductivity if dp.soil_conductivity is not None else None for dp in data_points],
