@@ -14,8 +14,8 @@ BAUDRATE = 9600
 MODBUS_PORT = '/dev/ttyUSB0'
 MODBUS_ADDRESS = 1
 MOVING_AVERAGE_WINDOW = 5 # Number of data points to average
-SAVE_INTERVAL_SECONDS = 60 # 1분에 한 번 저장
-LOOP_SLEEP_SECONDS = 0.1 # 0.1초마다 센서 값을 읽음 (CPU 과부하 방지)
+SAVE_INTERVAL_SECONDS = 60 # Save data every 60 seconds
+LOOP_SLEEP_SECONDS = 0.1 # Reads sensor data every 0.1 sec
 
 class Command(BaseCommand):
     help = 'Reads data from Arduino and Modbus, applies a moving average filter and calibration, and saves to the database every 60 seconds.'
@@ -32,6 +32,7 @@ class Command(BaseCommand):
             'ph_voltage': deque(maxlen=MOVING_AVERAGE_WINDOW),
             'ec_voltage': deque(maxlen=MOVING_AVERAGE_WINDOW),
             'water_temperature': deque(maxlen=MOVING_AVERAGE_WINDOW),
+            'tp_count' : deque(maxlen=MOVING_AVERAGE_WINDOW),
             'soil_humidity': deque(maxlen=MOVING_AVERAGE_WINDOW),
             'soil_temperature': deque(maxlen=MOVING_AVERAGE_WINDOW),
             'soil_conductivity': deque(maxlen=MOVING_AVERAGE_WINDOW),
@@ -56,20 +57,21 @@ class Command(BaseCommand):
     def parse_arduino_data(self, serial_line, settings):
         """
         Parses a comma-separated line from Arduino, applies smoothing and all calibrations.
-        Format: "AirTemp,AirHum,CO2,Insolation,Weight_Raw,pH_V,EC_V,WaterTemp"
+        Format: "AirTemp,AirHum,CO2,Insolation,Weight_Raw,pH_V,EC_V,WaterTemp,TpCount"
         """
         try:
             parts = serial_line.strip().split(',')
-            if len(parts) == 8:
+            if len(parts) == 9:
                 raw_data = {
                     'air_temperature': float(parts[0]),
                     'air_humidity': float(parts[1]),
                     'co2': float(parts[2]),
-                    'insolation': float(parts[3]), # Changed from lux
+                    'insolation': float(parts[3]),
                     'weight_raw': float(parts[4]),
                     'ph_voltage': float(parts[5]),
                     'ec_voltage': float(parts[6]),
                     'water_temperature': float(parts[7]),
+                    'tp_count': float(parts[8]),
                 }
 
                 # Apply moving average filter to raw data first
@@ -187,6 +189,7 @@ class Command(BaseCommand):
                                 ph_calibrated=max(0, self.latest_smoothed_data.get('ph_calibrated') or 0),
                                 ec_voltage=max(0, self.latest_smoothed_data.get('ec_voltage') or 0),
                                 ec_calibrated=max(0, self.latest_smoothed_data.get('ec_calibrated') or 0),
+                                tp_count=max(0, self.latest_smoothed_data.get('tp_count') or 0),
                                 soil_temperature=max(0, self.latest_smoothed_data.get('soil_temperature') or 0),
                                 soil_humidity=max(0, self.latest_smoothed_data.get('soil_humidity') or 0),
                                 soil_conductivity=max(0, self.latest_smoothed_data.get('soil_conductivity') or 0),
