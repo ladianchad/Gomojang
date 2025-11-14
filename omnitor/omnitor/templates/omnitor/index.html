@@ -367,14 +367,12 @@
             <div id="journal-calendar-container">
                 <input type="text" id="journal-calendar" style="display:none;">
             </div>
-            <div class="journal-display">
-                <h3><span id="display-date">오늘</span>의 일지</h3>
-                <div id="journal-content-display">
-                    <p>달력에서 날짜를 선택해 주세요.</p>
-                </div>
-            
-            <div class="journal-section" style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #eee;">
-                <h4>일일 캡처 시간 설정</h4>
+        <div class="journal-display">
+            <h3><span id="display-date">오늘</span>의 일지</h3>
+            <div id="journal-content-display">
+                <p>달력에서 날짜를 선택해 주세요.</p>
+            </div>
+            <h4>일일 캡처 시간 설정</h4>
                 <div>
                     <span>현재 설정된 시간: </span>
                     <strong id="current-capture-time-display">불러오는 중...</strong>
@@ -384,12 +382,14 @@
                     <input type="time" id="new-capture-time-input" class="form-control" style="width: auto; display: inline-block;">
                     <button type="button" id="save-capture-time-btn" class="btn">새 시간 저장</button>
                 </div>
-            </div>
-        
-            <img id="journal-image" src="https://placehold.co/600x400/eee/ccc?text=Image" alt="Journal Image" style="margin-top: 15px;">
+        </div>
+        <div class="journal-section" style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #eee;">
+                <img id="journal-image" src="https://placehold.co/600x400/eee/ccc?text=Image" alt="Journal Image" style="margin-top: 15px;">
                 <p id="image-capture-time-display" style="text-align: center; color: #555; font-size: 0.9em; margin-top: 5px;"></p>
                 <a id="download-image-link" href="#" class="download-btn" style="display: none;" download>이미지 저장하기</a>
-            </div>
+
+        </div>
+        
         <div class="journal-form">
                 <h3>일지 수정</h3>
                 <form id="journal-entry-form">
