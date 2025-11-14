@@ -108,6 +108,71 @@
         .journal-display h4 { margin: 15px 0 5px 0; }
         .journal-display p { background-color: #f8f9fa; padding: 10px; border-radius: 5px; white-space: pre-wrap; min-height: 20px; color: #333; }
         .journal-form textarea { width: 100%; min-height: 80px; padding: 10px; box-sizing: border-box; font-size: 16px; margin-top: 5px; resize: vertical; }
+        .journal-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr 1fr; /* 왼쪽고정, 중앙/우측 1:1 */
+            gap: 30px; /* 칸 사이 간격 */
+            min-height: 600px;
+            align-items: start; /* 내용물 높이가 달라도 위쪽 정렬 */
+            margin-top: 20px;
+        }
+        .journal-col-left {
+            border-right: 1px solid #eee;
+            padding-right: 20px;
+        }
+        .journal-col-center {
+            border-right: 1px solid #eee;
+            padding-right: 20px;
+        }
+        .journal-image-section {
+            margin-top: 30px;
+        }
+        .journal-image-section img {
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background-color: #f0f0f0;
+            object-fit: cover;
+            aspect-ratio: 4 / 3; /* 4:3 비율 유지 */
+            display: block;
+        }
+        .journal-display h4 { margin: 15px 0 5px 0; font-size: 0.95rem; color: #555; }
+        .journal-display p { 
+            background-color: #f8f9fa; 
+            padding: 12px; 
+            border-radius: 6px; 
+            white-space: pre-wrap; 
+            min-height: 20px; 
+            color: #333;
+            margin-bottom: 10px;
+            border: 1px solid #eee;
+        }
+        .journal-form label { display: block; margin-top: 10px; font-weight: bold; font-size: 0.9rem; }
+        .journal-form textarea {
+            width: 100%;
+            min-height: 60px;
+            padding: 10px;
+            box-sizing: border-box;
+            font-size: 14px;
+            margin-top: 5px;
+            resize: vertical;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+        .journal-form textarea:focus { outline: 2px solid #007bff; border-color: transparent; }
+        @media (max-width: 1100px) {
+            .journal-layout {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            .journal-col-left, .journal-col-center {
+                border-right: none;
+                border-bottom: 1px solid #eee;
+                padding-bottom: 30px;
+                padding-right: 0;
+            }
+        }
         .status-message { margin-top: 15px; font-weight: bold; padding: 10px; border-radius: 5px; display: none; text-align: center; }
         .status-success { background-color: #d4edda; color: #155724; }
         .status-error { background-color: #f8d7da; color: #721c24; }
@@ -362,52 +427,71 @@
     </div>
 
     <div id="journal" class="tab-content">
-        <h2>농장 일지</h2>
-        <div class="journal-layout">
+    <h2>농장 일지</h2>
+    
+    <div class="journal-layout">
+
+        <div class="journal-col-left">
             <div id="journal-calendar-container">
                 <input type="text" id="journal-calendar" style="display:none;">
-                <h4>일일 캡처 시간 설정</h4>
-                <div>
-                    <span>현재 설정된 시간: </span>
-                    <strong id="current-capture-time-display">불러오는 중...</strong>
-                </div>
-                <div style="margin-top: 10px;">
-                    <label for="new-capture-time-input">새 시간 (24시):</label>
-                    <input type="time" id="new-capture-time-input" class="form-control" style="width: auto; display: inline-block;">
-                    <button type="button" id="save-capture-time-btn" class="btn">새 시간 저장</button>
+                
+                <div style="margin-top: 20px; padding-top:15px; border-top: 1px solid #eee;">
+                    <h4>일일 캡처 시간</h4>
+                    <div style="margin-bottom: 5px;">
+                        <span>현재: </span>
+                        <strong id="current-capture-time-display" style="color: #007bff;">--:--</strong>
+                    </div>
+                    <div>
+                        <input type="time" id="new-capture-time-input" style="padding: 5px; border: 1px solid #ddd; border-radius: 4px;">
+                        <button type="button" id="save-capture-time-btn" style="padding: 5px 10px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer;">저장</button>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="journal-display">
-            <h3><span id="display-date">오늘</span>의 일지</h3>
-            <div id="journal-content-display">
-                <p>달력에서 날짜를 선택해 주세요.</p>
-            </div>
-        <div class="journal-section" style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #eee;">
-                <img id="journal-image" src="https://placehold.co/600x400/eee/ccc?text=Image" alt="Journal Image" style="margin-top: 15px;">
-                <p id="image-capture-time-display" style="text-align: center; color: #555; font-size: 0.9em; margin-top: 5px;"></p>
-                <a id="download-image-link" href="#" class="download-btn" style="display: none;" download>이미지 저장하기</a>
-        </div>
-        <div class="journal-form">
-                <h3>일지 수정</h3>
-                <form id="journal-entry-form">
-                    <input type="hidden" id="form-date">
-                    <label for="farm_work">1. 농작업:</label>
-                    <textarea id="farm_work" name="farm_work"></textarea><br><br>
-                    <label for="pesticide">2. 농약:</label>
-                    <textarea id="pesticide" name="pesticide"></textarea><br><br>
-                    <label for="fertilizer">3. 비료:</label>
-                    <textarea id="fertilizer" name="fertilizer"></textarea><br><br>
-                    <label for="harvest">4. 수확:</label>
-                    <textarea id="harvest" name="harvest"></textarea><br><br>
-                    <label for="notes">5. 특이사항:</label>
-                    <textarea id="notes" name="notes"></textarea><br><br>
-                    <button type="button" id="save-journal-btn">일지 저장</button>
-                    <div id="journal-status" class="status-message"></div>
-                </form>
-        </div>
-    </div>
 
+            <div class="journal-image-section">
+                <h4>현장 사진</h4>
+                <img id="journal-image" src="https://placehold.co/600x400/eee/ccc?text=No+Image" alt="Journal Image">
+                <p id="image-capture-time-display" style="text-align: center; color: #888; font-size: 0.85em; margin-top: 5px; background: none;"></p>
+                <a id="download-image-link" href="#" style="display: block; text-align: center; font-size: 0.9em; color: #007bff; text-decoration: none; display: none;" download>이미지 저장</a>
+            </div>
+        </div>
+
+        <div class="journal-col-center journal-display">
+            <h3><span id="display-date" style="color: #2c3e50;">오늘</span>의 기록</h3>
+            
+            <div id="journal-content-display">
+                <p style="color: #888; text-align: center; padding-top: 50px;">달력에서 날짜를 선택하면<br>작성된 일지가 여기에 표시돼.</p>
+            </div>
+        </div>
+
+        <div class="journal-col-right journal-form">
+            <h3>일지 작성/수정</h3>
+            <form id="journal-entry-form">
+                <input type="hidden" id="form-date">
+                
+                <label>1. 농작업</label>
+                <textarea id="farm_work" name="farm_work" placeholder="오늘 한 일을 기록해봐"></textarea>
+                
+                <label>2. 농약</label>
+                <textarea id="pesticide" name="pesticide" style="min-height: 50px;"></textarea>
+                
+                <label>3. 비료</label>
+                <textarea id="fertilizer" name="fertilizer" style="min-height: 50px;"></textarea>
+                
+                <label>4. 수확</label>
+                <textarea id="harvest" name="harvest" style="min-height: 50px;"></textarea>
+                
+                <label>5. 특이사항</label>
+                <textarea id="notes" name="notes"></textarea>
+                
+                <div style="margin-top: 15px; text-align: right;">
+                    <button type="button" id="save-journal-btn" style="background-color: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; width: 100%;">저장하기</button>
+                </div>
+                <div id="journal-status" class="status-message" style="margin-top:10px; text-align: center; font-weight: bold;"></div>
+            </form>
+        </div>
+
+    </div> </div>
 
     <div id="calibration" class="tab-content">
         <div class="calibration-section">
