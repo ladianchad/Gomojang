@@ -273,7 +273,7 @@ def historical_data_api(request):
         'datasets': {
             'weight': [dp.weight_calibrated if dp.weight_calibrated is not None else None for dp in data_points],
             'irrigation': irrigation_list,
-            'tip_total': [getattr(dp, 'tip_total', 0) for dp in data_points],
+            'tip_total': [dp.tip_total if dp.tip_total is not None else None for dp in data_points],
             
             'air_temperature': [dp.air_temperature if dp.air_temperature is not None else None for dp in data_points],
             'air_humidity': [dp.air_humidity if dp.air_humidity is not None else None for dp in data_points],
