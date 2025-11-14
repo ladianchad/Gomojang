@@ -6,6 +6,7 @@ import math
 import minimalmodbus
 import serial.tools.list_ports
 from collections import deque
+from datetime import datetime
 from django.core.management.base import BaseCommand
 from omnitor.models import SensorData, CalibrationSettings
 
@@ -56,7 +57,8 @@ class Command(BaseCommand):
         }
         self.last_save_time = 0.0
         self.latest_smoothed_data = None
-        self.last_tip_count = None
+        self.daily_baseline_tip_count = None # 자정 시점의 아두이노 누적 카운트
+        self.last_reset_date = None # 마지막으로 리셋한 날짜
 
     def apply_smoothing(self, data_dict):
         """Applies a moving average to new data and returns the smoothed values."""
@@ -104,29 +106,12 @@ class Command(BaseCommand):
                 
                 # Apply moving average filter to raw data first
                 smoothed_raw_data = self.apply_smoothing(raw_data)
+                smoothed_raw_data['tip_count'] = tip_count
+                
                 calibrated_data = {}
                 
                 # Weight calibration
                 calibrated_data['weight_calibrated'] = (smoothed_raw_data['weight_raw'] * settings.weight_slope) + settings.weight_intercept if settings.weight_slope is not None and settings.weight_intercept is not None else 0
-
-                # Calculate tipping gauge total volume of water
-                irrigation_volume = 0.0
-                
-                if self.last_tip_count is not None:
-                    diff = tip_count - self.last_tip_count
-                    if diff < 0: 
-                        # 아두이노가 재부팅되어 카운트가 0으로 초기화된 경우, 현재 값만큼을 배액량으로 간주
-                        irrigation_volume = tip_count * tip_capacity
-                    else:
-                        # 정상적인 경우 (증가량 * 1회당 부피)
-                        irrigation_volume = diff * tip_capacity
-                
-                # 현재 카운트를 '이전 카운트'로 저장 (다음 루프를 위해)
-                self.last_tip_count = tip_count
-                
-                # 계산된 1분간의 배액량을 저장
-                calibrated_data['tip_total'] = irrigation_volume
-                smoothed_data['tip_count'] = tip_count
                 
                 # pH Calibration (2-point + temperature compensation)
                 base_ph = (smoothed_raw_data['ph_voltage'] * settings.ph_slope) + settings.ph_intercept
@@ -179,7 +164,7 @@ class Command(BaseCommand):
             arduino_ser = serial.Serial(found_port, BAUDRATE, timeout=1)
             time.sleep(2)
             arduino_ser.reset_input_buffer()
-            self.stdout.write(self.style.SUCCESS(f"Success: Connected to Arduino on {ARDUINO_PORT}."))
+            self.stdout.write(self.style.SUCCESS(f"Success: Connected to Arduino on {found_port}."))
         except serial.SerialException as e:
             self.stderr.write(self.style.ERROR(f"Arduino connection failed: {e}. Exiting."))
             return
@@ -215,9 +200,6 @@ class Command(BaseCommand):
                         all_data = {**arduino_data}
                         if soil_data:
                             all_data.update(soil_data)
-                        
-                        if 'tip_total' in arduino_data:
-                             all_data['tip_total'] = arduino_data['tip_total']
 
                         # save latest smoothed data to class variable
                         self.latest_smoothed_data = all_data
@@ -239,6 +221,31 @@ class Command(BaseCommand):
                                         data_to_save[key] = max(0, val or 0)
                                 else:
                                     data_to_save[key] = val
+
+                            # 현재 날짜와 현재 누적 팁 카운트 가져오기
+                            today = datetime.now().date()
+                            current_tip_count = data_to_save.get('tip_count')
+                            tip_total_to_save = 0.0 # 기본값
+
+                            if current_tip_count is not None:
+                                # 자정 리셋: 스크립트 첫 실행이거나 날짜가 바뀌었으면
+                                if self.last_reset_date is None or self.last_reset_date != today:
+                                    self.stdout.write(self.style.SUCCESS(f"--- 🗓️ Midnight Reset: Setting new daily tip baseline to {current_tip_count} ---"))
+                                    self.daily_baseline_tip_count = current_tip_count
+                                    self.last_reset_date = today
+                                
+                                # 일일 누적 배액량 계산
+                                if self.daily_baseline_tip_count is not None:
+                                    diff = current_tip_count - self.daily_baseline_tip_count
+                                    
+                                    # 4. 아두이노가 재부팅된 경우 (현재값이 기준값보다 작아짐)
+                                    if diff < 0:
+                                        self.stdout.write(self.style.WARNING(f"경고: 아두이노 리셋"))
+                                        # 아두이노가 0부터 다시 시작했다고 가정하고, 기준값을 0으로 리셋
+                                        self.daily_baseline_tip_count = 0 
+                                        diff = current_tip_count # 일일 누적값은 0부터 다시 시작한 현재값이 됨
+                                    
+                                    tip_total_to_save = diff * tip_capacity
                             
                             SensorData.objects.create(
                                 air_temperature=data_to_save.get('air_temperature'),
@@ -253,13 +260,12 @@ class Command(BaseCommand):
                                 ec_voltage=data_to_save.get('ec_voltage'),
                                 ec_calibrated=data_to_save.get('ec_calibrated'),
                                 tip_count=data_to_save.get('tip_count'),
-                                tip_total=data_to_save.get('tip_total'),
+                                tip_total=tip_total_to_save,
                                 soil_temperature=data_to_save.get('soil_temperature'),
                                 soil_humidity=data_to_save.get('soil_humidity'),
                                 soil_conductivity=data_to_save.get('soil_conductivity'),
                                 soil_ph=data_to_save.get('soil_ph'),
                             )
-                            self.stdout.write(self.style.SUCCESS(log_msg))
                             
                             self.stdout.write(self.style.SUCCESS(f"Saved 1-minute data at {time.strftime('%Y-%m-%d %H:%M:%S')}"))
                             
