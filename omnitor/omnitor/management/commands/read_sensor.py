@@ -222,31 +222,30 @@ class Command(BaseCommand):
                                 else:
                                     data_to_save[key] = val
 
-                            # 현재 날짜와 현재 누적 팁 카운트 가져오기
-                            today = datetime.now().date()
-                            current_tip_count = data_to_save.get('tip_count')
-                            tip_total_to_save = 0.0 # 기본값
-
-                            if current_tip_count is not None:
-                                # 자정 리셋: 스크립트 첫 실행이거나 날짜가 바뀌었으면
+                            today = datetime.now().date()
+                            current_arduino_total_count = data_to_save.get('tip_count') # (예: 502)
+                            daily_tip_count = 0.0 # (오늘 하루 누적 팁 횟수, 기본값 0)
+                            
+                            if current_arduino_total_count is not None:
+                                # 1. 자정 리셋: 스크립트 첫 실행이거나 날짜가 바뀌었으면
                                 if self.last_reset_date is None or self.last_reset_date != today:
-                                    self.stdout.write(self.style.SUCCESS(f"--- 🗓️ Midnight Reset: Setting new daily tip baseline to {current_tip_count} ---"))
-                                    self.daily_baseline_tip_count = current_tip_count
+                                    self.stdout.write(self.style.SUCCESS(f"--- 🗓️ 자정 리셋: 새 기준 팁 횟수 {current_arduino_total_count} 설정 ---"))
+                                    self.daily_baseline_tip_count = current_arduino_total_count # '자정 기준' (예: 500)
                                     self.last_reset_date = today
                                 
-                                # 일일 누적 배액량 계산
+                                # 2. '자정 기준' 값이 설정되었다면
                                 if self.daily_baseline_tip_count is not None:
-                                    diff = current_tip_count - self.daily_baseline_tip_count
-                                    
-                                    # 4. 아두이노가 재부팅된 경우 (현재값이 기준값보다 작아짐)
-                                    if diff < 0:
-                                        self.stdout.write(self.style.WARNING(f"경고: 아두이노 리셋"))
-                                        # 아두이노가 0부터 다시 시작했다고 가정하고, 기준값을 0으로 리셋
-                                        self.daily_baseline_tip_count = 0 
-                                        diff = current_tip_count # 일일 누적값은 0부터 다시 시작한 현재값이 됨
-                                    
-                                    tip_total_to_save = diff * tip_capacity
-                            
+                                    # 3. 아두이노 리셋 감지
+                                    if current_arduino_total_count < self.daily_baseline_tip_count:
+                                        self.stdout.write(self.style.WARNING(f"--- 아두이노 리셋 감지: 기준 {self.daily_baseline_tip_count} > 현재 {current_arduino_total_count}. 기준을 {current_arduino_total_count}로 리셋 ---"))
+                                        self.daily_baseline_tip_count = current_arduino_total_count
+                                    
+                                    # 4. 오늘 누적 팁 횟수 = (현재 총 횟수 - 기준 횟수)
+                                    daily_tip_count = current_arduino_total_count - self.daily_baseline_tip_count
+                                
+                            # 5. 일일 누적 배액량(mL) 계산
+                            tip_total_to_save = daily_tip_count * tip_capacity
+                            
                             SensorData.objects.create(
                                 air_temperature=data_to_save.get('air_temperature'),
                                 air_humidity=data_to_save.get('air_humidity'),
