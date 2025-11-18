@@ -6,15 +6,10 @@ from django.conf import settings as django_settings
 from django.contrib.staticfiles.storage import staticfiles_storage
 from .models import SensorData, CalibrationSettings, FarmJournal
 import json
-import serial
 import time
 import statistics
 import math
 import os
-
-# --- Serial Configuration ---
-SERIAL_PORT = '/dev/ttyACM0'
-BAUD_RATE = 9600
 
 # --- Camera Settings Path --
 BASE_DIR_GOMOJANG = os.path.expanduser("~/gomojang/omnitor") 
@@ -35,65 +30,65 @@ def get_current_capture_time():
         return DEFAULT_CAPTURE_TIME
 
 # --- Helper Function for Calibration ---
-def get_stable_reading_from_arduino(data_index):
-    values = []
-    ser = None # Initialize ser to None
-    try:
-        if not os.path.exists(SERIAL_PORT):
-            print(f"Error: Serial port {SERIAL_PORT} not found.")
-            return (None, f"Serial port {SERIAL_PORT} not found.")
-
-        ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1.5)
-        ser.flushInput()
-        sample_count = 0
-        max_samples = 15
-        start_time = time.time()
-
-        while sample_count < max_samples and (time.time() - start_time) < 5:
-            if ser.in_waiting > 0:
-                try:
-                    line = ser.readline().decode('utf-8').strip()
-                    parts = line.split(',')
-                    if len(parts) == 8:
-                        raw_value = float(parts[data_index])
-                        values.append(raw_value)
-                        sample_count += 1
-                except (UnicodeDecodeError, ValueError, IndexError) as e:
-                    print(f"Debug: Error parsing line '{line}': {e}")
-                continue
+def get_reading_from_sensor_file(target_key):
+    """
+    target_key 예시: 'weight_raw', 'ph_voltage', 'ec_voltage'
+    """
+    # read_sensors.py가 저장하는 파일 위치
+    state_file_path = '/tmp/sensor_state.json' 
+    readings = []
+    
+    # 파일이 생성되거나 업데이트될 때까지 최대 3초간 시도
+    start_time = time.time()
+    
+    while (time.time() - start_time) < 3:
+        try:
+            if os.path.exists(state_file_path):
+                with open(state_file_path, 'r') as f:
+                    data = json.load(f)
+                    
+                    # 요청한 키(예: 'weight_raw')가 있으면 리스트에 추가
+                    if target_key in data:
+                        readings.append(data[target_key])
+            
+            # 안정적인 값을 위해 5번 정도 읽으면 중앙값 반환
+            if len(readings) >= 5:
+                return (statistics.median(readings), "Success")
+                
+            time.sleep(0.1) # 0.1초 대기 (read_sensors가 0.1초마다 갱신하므로)
+            
+        except (json.JSONDecodeError, IOError):
+            # 파일이 쓰기 중(Lock)이라 읽기 실패할 수 있음 -> 무시하고 재시도
             time.sleep(0.05)
+        except Exception as e:
+            print(f"Error reading state file: {e}")
+            return (None, f"Error: {e}")
 
-        if len(values) < 2: # Require at least 2 valid samples
-            msg = f"Not enough valid data received. Got {len(values)} samples."
-            print(f"Error: {msg}")
-            return (None, msg)
-        
-        return (statistics.median(values), "Success")
-
-    except serial.SerialException as e:
-        msg = f"Serial port error: {e}"
-        print(f"Error: {msg}")
-        return (None, msg)
-    except Exception as e:
-        msg = f"An unexpected error occurred: {e}"
-        print(f"Error: {msg}")
-        return (None, msg)
-    finally:
-        if ser and ser.is_open:
-            ser.close()
+    if not readings:
+        return (None, "Timeout: 센서 데이터 파일(/tmp/sensor_state.json)을 읽을 수 없습니다. read_sensors가 실행 중인가요?")
+    
+    # 5개를 못 채웠더라도 읽은 게 있으면 반환
+    return (statistics.median(readings), "Success")
+    
 def settings_api(request):
     settings = CalibrationSettings.load()
 
     if request.method == 'GET':
         data = {
-            'weight_offset': settings.weight_offset,
-            'weight_scale': settings.weight_scale,
+            'weight_point1_raw': settings.weight_point1_raw,
+            'weight_point1_value': settings.weight_point1_value,
+            'weight_point2_raw': settings.weight_point2_raw,
+            'weight_point2_value': settings.weight_point2_value,
+            'weight_slope': settings.weight_slope,
+            'weight_intercept': settings.weight_intercept,
+            
             'ph_point1_voltage': settings.ph_point1_voltage,
             'ph_point1_value': settings.ph_point1_value,
             'ph_point2_voltage': settings.ph_point2_voltage,
             'ph_point2_value': settings.ph_point2_value,
             'ph_slope': settings.ph_slope,
             'ph_intercept': settings.ph_intercept,
+            
             'ec_point1_voltage': settings.ec_point1_voltage,
             'ec_point1_value': settings.ec_point1_value,
             'ec_point2_voltage': settings.ec_point2_voltage,
@@ -108,7 +103,7 @@ def settings_api(request):
             data = json.loads(request.body)
             changed = False
             for key, value in data.items():
-                if key.endswith('_voltage') or key.endswith('_value') or key.endswith('_offset') or key.endswith('_scale') or key.endswith('_slope') or key.endswith('_intercept'):
+                if key.endswith('_voltage') or key.endswith('_value') or key.endswith('_raw') or key.endswith('_slope') or key.endswith('_intercept'):
                     try:
                         float_value = float(value) if value is not None and value != '' else None
                         if hasattr(settings, key) and getattr(settings, key) != float_value:
@@ -145,18 +140,18 @@ def calibration_api(request):
 
     reading, message = (None, "Invalid action")
 
-    if action == 'tare':
-        reading, message = get_stable_reading_from_arduino(4)
+    if action == 'get_weight_raw':
+        reading, message = get_reading_from_sensor_file('weight_raw')
         if reading is not None:
-            return JsonResponse({'status': 'success', 'offset': reading})
+            return JsonResponse({'status': 'success', 'raw': reading})
 
     elif action == 'get_ph_voltage':
-        reading, message = get_stable_reading_from_arduino(5)
+        reading, message = get_reading_from_sensor_file('ph_voltage')
         if reading is not None:
             return JsonResponse({'status': 'success', 'voltage': reading})
 
     elif action == 'get_ec_voltage':
-        reading, message = get_stable_reading_from_arduino(6)
+        reading, message = get_reading_from_sensor_file('ec_voltage')
         if reading is not None:
             return JsonResponse({'status': 'success', 'voltage': reading})
 
@@ -165,12 +160,25 @@ def calibration_api(request):
         return JsonResponse({'status': 'error', 'message': detailed_message}, status=500)
 
     return HttpResponseBadRequest("Invalid action specified or failed to execute.")
+
+
 def sensor_dashboard_view(request):
     return render(request, 'omnitor/index.html')
 
 def latest_data_api(request):
     try:
         latest = SensorData.objects.latest('timestamp')
+        
+        prev = SensorData.objects.filter(timestamp__lt=latest.timestamp).order_by('-timestamp').first()
+        
+        # 급수량 계산 (현재 무게 - 이전 무게)
+        # 0보다 클 때만 급수량으로 인정 (무게가 줄어드는 건 증발/배액이므로 제외)
+        irrigation_amount = 0
+        if prev and latest.weight_calibrated is not None and prev.weight_calibrated is not None:
+            diff = latest.weight_calibrated - prev.weight_calibrated
+            if diff > 0:
+                irrigation_amount = diff
+        
         data = {
             'timestamp': latest.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
             'air_temperature': latest.air_temperature,
@@ -178,6 +186,8 @@ def latest_data_api(request):
             'co2': latest.co2,
             'insolation': latest.insolation,
             'water_temperature': latest.water_temperature,
+            'tip_total': latest.tip_total,
+            'irrigation_amount': irrigation_amount,
             'weight_calibrated': latest.weight_calibrated,
             'ph_calibrated': latest.ph_calibrated,
             'ec_calibrated': latest.ec_calibrated,
@@ -188,10 +198,11 @@ def latest_data_api(request):
         }
         return JsonResponse(data)
     except SensorData.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'No data available.'}, status=404)
+        return JsonResponse({'status': 'error', 'message': '데이터가 없습니다.'}, status=404)
     except Exception as e:
         print(f"Error in latest_data_api: {e}")
-        return JsonResponse({'status': 'error', 'message': 'Server error fetching latest data.'}, status=500)
+        return JsonResponse({'status': 'error', 'message': '서버 에러!!!'}, status=500)
+
 def historical_data_api(request):
     start_date_str = request.GET.get('start_date')
     end_date_str = request.GET.get('end_date')
@@ -214,19 +225,19 @@ def historical_data_api(request):
             print(f"Timespan selected: {timespan}, range: {start_time} to {end_time}")
         else:
             start_time = end_time - timedelta(hours=1)
-            print(f"Warning: No time range specified, defaulting to last 1 hour.")
+            print(f"시간 범위를 선택하지 않아 기본인 최근 1시간 단위로 표시합니다.")
     except ValueError:
-        return JsonResponse({'status': 'error', 'message': 'Invalid date format. Use YYYY-MM-DD.'}, status=400)
+        return JsonResponse({'status': 'error', 'message': '날짜 형식이 틀렸습니다. 연연연연-월월-일일 형식을 사용하세요.'}, status=400)
     except Exception as e:
         print(f"Error parsing date/time parameters: {e}")
-        return JsonResponse({'status': 'error', 'message': 'Error processing date/time parameters.'}, status=500)
+        return JsonResponse({'status': 'error', 'message': '날짜 에러.'}, status=500)
 
     if start_time is None:
-        return JsonResponse({'status': 'error', 'message': 'Could not determine time range.'}, status=400)
+        return JsonResponse({'status': 'error', 'message': '시간 범위를 받지 못했습니다'}, status=400)
     try:
         data_points_qs = SensorData.objects.filter(timestamp__range=(start_time, end_time)).order_by('timestamp')
         count = data_points_qs.count()
-        print(f"Found {count} data points for the selected range.") # Debugging
+        print(f"{count}개의 데이터를 찾았습니다.") # 디버깅용
 
         MAX_GRAPH_POINTS = 500
         data_points = []
@@ -237,6 +248,23 @@ def historical_data_api(request):
         elif count > 0:
             data_points = list(data_points_qs)
 
+        # [추가됨] 급수량 계산 로직 (그래프용)
+        # 리스트를 순회하며 (현재 무게 - 이전 무게)가 양수일 때만 급수량으로 기록
+        irrigation_list = []
+        prev_weight = None
+        
+        for dp in data_points:
+            current_weight = dp.weight_calibrated
+            val = 0
+            if current_weight is not None and prev_weight is not None:
+                diff = current_weight - prev_weight
+                if diff > 0:
+                    val = diff
+            irrigation_list.append(val)
+            # 값이 None이 아닐 때만 prev_weight 갱신
+            if current_weight is not None:
+                prev_weight = current_weight
+                
     except Exception as e:
         print(f"Error querying or thinning database: {e}")
         return JsonResponse({'status': 'error', 'message': 'Error retrieving data from database.'}, status=500)
@@ -244,13 +272,18 @@ def historical_data_api(request):
         'labels': [dp.timestamp.isoformat() for dp in data_points],
         'datasets': {
             'weight': [dp.weight_calibrated if dp.weight_calibrated is not None else None for dp in data_points],
+            'irrigation': irrigation_list,
+            'tip_total': [dp.tip_total if dp.tip_total is not None else None for dp in data_points],
+            
             'air_temperature': [dp.air_temperature if dp.air_temperature is not None else None for dp in data_points],
             'air_humidity': [dp.air_humidity if dp.air_humidity is not None else None for dp in data_points],
             'co2': [dp.co2 if dp.co2 is not None else None for dp in data_points],
             'insolation': [dp.insolation if dp.insolation is not None else None for dp in data_points],
+            
             'ec': [dp.ec_calibrated if dp.ec_calibrated is not None else None for dp in data_points],
             'ph': [dp.ph_calibrated if dp.ph_calibrated is not None else None for dp in data_points],
             'water_temperature': [dp.water_temperature if dp.water_temperature is not None else None for dp in data_points],
+
             'soil_temperature': [dp.soil_temperature if dp.soil_temperature is not None else None for dp in data_points],
             'soil_humidity': [dp.soil_humidity if dp.soil_humidity is not None else None for dp in data_points],
             'soil_conductivity': [dp.soil_conductivity if dp.soil_conductivity is not None else None for dp in data_points],

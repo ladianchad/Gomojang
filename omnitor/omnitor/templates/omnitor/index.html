@@ -108,6 +108,71 @@
         .journal-display h4 { margin: 15px 0 5px 0; }
         .journal-display p { background-color: #f8f9fa; padding: 10px; border-radius: 5px; white-space: pre-wrap; min-height: 20px; color: #333; }
         .journal-form textarea { width: 100%; min-height: 80px; padding: 10px; box-sizing: border-box; font-size: 16px; margin-top: 5px; resize: vertical; }
+        .journal-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr 1fr; /* 왼쪽고정, 중앙/우측 1:1 */
+            gap: 30px; /* 칸 사이 간격 */
+            min-height: 600px;
+            align-items: start; /* 내용물 높이가 달라도 위쪽 정렬 */
+            margin-top: 20px;
+        }
+        .journal-col-left {
+            border-right: 1px solid #eee;
+            padding-right: 20px;
+        }
+        .journal-col-center {
+            border-right: 1px solid #eee;
+            padding-right: 20px;
+        }
+        .journal-image-section {
+            margin-top: 30px;
+        }
+        .journal-image-section img {
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background-color: #f0f0f0;
+            object-fit: cover;
+            aspect-ratio: 4 / 3; /* 4:3 비율 유지 */
+            display: block;
+        }
+        .journal-display h4 { margin: 15px 0 5px 0; font-size: 0.95rem; color: #555; }
+        .journal-display p { 
+            background-color: #f8f9fa; 
+            padding: 12px; 
+            border-radius: 6px; 
+            white-space: pre-wrap; 
+            min-height: 20px; 
+            color: #333;
+            margin-bottom: 10px;
+            border: 1px solid #eee;
+        }
+        .journal-form label { display: block; margin-top: 10px; font-weight: bold; font-size: 0.9rem; }
+        .journal-form textarea {
+            width: 100%;
+            min-height: 60px;
+            padding: 10px;
+            box-sizing: border-box;
+            font-size: 14px;
+            margin-top: 5px;
+            resize: vertical;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+        .journal-form textarea:focus { outline: 2px solid #007bff; border-color: transparent; }
+        @media (max-width: 1100px) {
+            .journal-layout {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            .journal-col-left, .journal-col-center {
+                border-right: none;
+                border-bottom: 1px solid #eee;
+                padding-bottom: 30px;
+                padding-right: 0;
+            }
+        }
         .status-message { margin-top: 15px; font-weight: bold; padding: 10px; border-radius: 5px; display: none; text-align: center; }
         .status-success { background-color: #d4edda; color: #155724; }
         .status-error { background-color: #f8d7da; color: #721c24; }
@@ -203,10 +268,10 @@
             </div>
         </div>
         
-        <h3>무게 & 배액</h3>
+        <h3>무게 & 배액량</h3>
         <div class="data-grid">
             <div class="data-card">
-                <div class="label">무게</div>
+                <div class="label">총 무게</div>
                 <div class="progress-circle-container">
                     <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
                         <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
@@ -217,6 +282,34 @@
                     </svg>
                 </div>
             </div>
+            <div class="data-card">
+                <div class="label">급수량</div>
+                <div class="progress-circle-container">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
+                        <circle id="inner-irrigation_amount" r="71" cx="91" cy="91" fill="#E8F5E9"></circle>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-irrigation_amount" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-irrigation_amount">-</text>
+                        <text class="progress-unit" x="66" y="160">mL</text>
+                    </svg>
+                </div>
+            </div>
+            <div class="data-card">
+                <div class="label">배액량</div>
+                <div class="progress-circle-container">
+                    <svg width="180" height="180" viewBox="-22.75 -22.75 227.5 227.5" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="progress-bg" r="81" cx="91" cy="91"></circle>
+                        <circle id="inner-tip_total" r="71" cx="91" cy="91" fill="#E8F5E9"></circle>
+                        <circle class="progress-fg" r="81" cx="91" cy="91" id="bar-tip_total" stroke-dasharray="509" stroke-dashoffset="509" stroke="#63D65C"></circle>
+                        <text class="progress-text" x="91" y="86" id="text-tip_total">-</text>
+                        <text class="progress-unit" x="66" y="160">mL</text>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <h3>배액 수온, pH, EC</h3>
+        <div class="data-grid">
             <div class="data-card">
                 <div class="label">수온</div>
                 <div class="progress-circle-container">
@@ -334,71 +427,90 @@
     </div>
 
     <div id="journal" class="tab-content">
-        <h2>농장 일지</h2>
-        <div class="journal-layout">
+    <h2>농장 일지</h2>
+    
+    <div class="journal-layout">
+
+        <div class="journal-col-left">
             <div id="journal-calendar-container">
                 <input type="text" id="journal-calendar" style="display:none;">
-            </div>
-            <div class="journal-display">
-                <h3><span id="display-date">오늘</span>의 일지</h3>
-                <div id="journal-content-display">
-                    <p>달력에서 날짜를 선택해 주세요.</p>
-                </div>
-            
-            <div class="journal-section" style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #eee;">
-                <h4>일일 캡처 시간 설정</h4>
-                <div>
-                    <span>현재 설정된 시간: </span>
-                    <strong id="current-capture-time-display">불러오는 중...</strong>
-                </div>
-                <div style="margin-top: 10px;">
-                    <label for="new-capture-time-input">새 시간 (24시):</label>
-                    <input type="time" id="new-capture-time-input" class="form-control" style="width: auto; display: inline-block;">
-                    <button type="button" id="save-capture-time-btn" class="btn">새 시간 저장</button>
+                
+                <div style="margin-top: 20px; padding-top:15px; border-top: 1px solid #eee;">
+                    <h4>일일 캡처 시간</h4>
+                    <div style="margin-bottom: 5px;">
+                        <span>현재: </span>
+                        <strong id="current-capture-time-display" style="color: #007bff;">--:--</strong>
+                    </div>
+                    <div>
+                        <input type="time" id="new-capture-time-input" style="padding: 5px; border: 1px solid #ddd; border-radius: 4px;">
+                        <button type="button" id="save-capture-time-btn" style="padding: 5px 10px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer;">저장</button>
+                    </div>
                 </div>
             </div>
-        
-            <img id="journal-image" src="https://placehold.co/600x400/eee/ccc?text=Image" alt="Journal Image" style="margin-top: 15px;">
-                <p id="image-capture-time-display" style="text-align: center; color: #555; font-size: 0.9em; margin-top: 5px;"></p>
-                <a id="download-image-link" href="#" class="download-btn" style="display: none;" download>이미지 저장하기</a>
-            </div>
-        <div class="journal-form">
-                <h3>일지 수정</h3>
-                <form id="journal-entry-form">
-                    <input type="hidden" id="form-date">
-                    <label for="farm_work">1. 농작업:</label>
-                    <textarea id="farm_work" name="farm_work"></textarea><br><br>
-                    <label for="pesticide">2. 농약:</label>
-                    <textarea id="pesticide" name="pesticide"></textarea><br><br>
-                    <label for="fertilizer">3. 비료:</label>
-                    <textarea id="fertilizer" name="fertilizer"></textarea><br><br>
-                    <label for="harvest">4. 수확:</label>
-                    <textarea id="harvest" name="harvest"></textarea><br><br>
-                    <label for="notes">5. 특이사항:</label>
-                    <textarea id="notes" name="notes"></textarea><br><br>
-                    <button type="button" id="save-journal-btn">일지 저장</button>
-                    <div id="journal-status" class="status-message"></div>
-                </form>
+
+            <div class="journal-image-section">
+                <h4>현장 사진</h4>
+                <img id="journal-image" src="https://placehold.co/600x400/eee/ccc?text=No+Image" alt="Journal Image">
+                <p id="image-capture-time-display" style="text-align: center; color: #888; font-size: 0.85em; margin-top: 5px; background: none;"></p>
+                <a id="download-image-link" href="#" style="display: block; text-align: center; font-size: 0.9em; color: #007bff; text-decoration: none; display: none;" download>이미지 저장</a>
             </div>
         </div>
-    </div>
 
+        <div class="journal-col-center journal-display">
+            <h3><span id="display-date" style="color: #2c3e50;">오늘</span>의 기록</h3>
+            
+            <div id="journal-content-display">
+                <p style="color: #888; text-align: center; padding-top: 50px;">달력에서 날짜를 선택하면<br>작성된 일지가 여기에 표시돼.</p>
+            </div>
+        </div>
+
+        <div class="journal-col-right journal-form">
+            <h3>일지 작성/수정</h3>
+            <form id="journal-entry-form">
+                <input type="hidden" id="form-date">
+                
+                <label>1. 농작업</label>
+                <textarea id="farm_work" name="farm_work" placeholder="오늘 한 일을 기록해봐"></textarea>
+                
+                <label>2. 농약</label>
+                <textarea id="pesticide" name="pesticide" style="min-height: 50px;"></textarea>
+                
+                <label>3. 비료</label>
+                <textarea id="fertilizer" name="fertilizer" style="min-height: 50px;"></textarea>
+                
+                <label>4. 수확</label>
+                <textarea id="harvest" name="harvest" style="min-height: 50px;"></textarea>
+                
+                <label>5. 특이사항</label>
+                <textarea id="notes" name="notes"></textarea>
+                
+                <div style="margin-top: 15px; text-align: right;">
+                    <button type="button" id="save-journal-btn" style="background-color: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; width: 100%;">저장하기</button>
+                </div>
+                <div id="journal-status" class="status-message" style="margin-top:10px; text-align: center; font-weight: bold;"></div>
+            </form>
+        </div>
+
+    </div> </div>
 
     <div id="calibration" class="tab-content">
         <div class="calibration-section">
             <div class="calibration-box">
-                <h2>무게 보정</h2>
-                <p><strong>영점:</strong> <span id="current-offset">...</span></p>
-                <p><strong>보정 계수:</strong> <span id="current-scale">...</span></p>
-                <hr>
-                <p><strong>1단계: 영점</strong><br>아무것도 올리지 마시고 '영점' 버튼을 눌러 주세요.</p>
-                <button id="tare-btn">영점 (0)</button>
-                <br><br>
-                <p><strong>2단계: 보정</strong><br>아는 무게를 올리시고 무게를 입력해 주세요.</p>
-                <input type="number" id="known-weight" placeholder="e.g., 100"> <span>g</span>
-                <button id="calibrate-btn" disabled>Calibrate</button>
-                <div id="weight-status" class="status-message"></div>
-            </div>
+                <h2>무게 보정</h2>
+                <p><strong>보정계수:</strong> <span id="current-weight-slope">...</span></p>
+                <p><strong>영점:</strong> <span id="current-weight-intercept">...</span></p>
+                <hr>
+                <p><strong>점 1 (예: 0 g 또는 100 g)</strong></p>
+                <input type="number" step="1" id="weight-val-1" value="0"> <span>g</span>
+                <button id="weight-cal-btn-1">입력</button>
+                <p><em>Raw Value 1: <span id="weight-raw-1">...</span></em></p>
+                <br>
+                <p><strong>점 2 (예: 500 g 또는 1000 g)</strong></p>
+                <input type="number" step="1" id="weight-val-2" value="1000"> <span>g</span>
+                <button id="weight-cal-btn-2">입력</button>
+                <p><em>Raw Value 2: <span id="weight-raw-2">...</span></em></p>
+                <div id="weight-status" class="status-message"></div>
+            </div>
             <div class="calibration-box">
                 <h2>pH 보정</h2>
                 <p><strong>영점:</strong> <span id="current-ph-intercept">...</span></p>
@@ -476,8 +588,8 @@ document.addEventListener('DOMContentLoaded', () => {
     //document.getElementById('timespan-select').addEventListener('change', () => updateAllCharts());
     document.getElementById('save-journal-btn').addEventListener('click', () => saveJournalEntry());
     document.getElementById('save-capture-time-btn').addEventListener('click', () => saveCameraCaptureTime());
-    document.getElementById('tare-btn').addEventListener('click', () => performTare());
-    document.getElementById('calibrate-btn').addEventListener('click', () => performWeightCalibrate());
+    document.getElementById('weight-cal-btn-1').addEventListener('click', () => performWeightCalibrate(1));
+    document.getElementById('weight-cal-btn-2').addEventListener('click', () => performWeightCalibrate(2));
     document.getElementById('ph-cal-btn-1').addEventListener('click', () => performPhCalibrate(1));
     document.getElementById('ph-cal-btn-2').addEventListener('click', () => performPhCalibrate(2));
     document.getElementById('ec-cal-btn-1').addEventListener('click', () => performEcCalibrate(1));
@@ -619,8 +731,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             document.getElementById('latest-timestamp').textContent = data.timestamp;
             
-            // --- Define Min/Max ranges for your progress bars ---
-            // !!! You should adjust these values to fit your farm !!!
+            // !!! 최소 최대 설정 필요 !!!
             const sensorConfig = {
                 'air_temperature': { min: -20, max: 80, defaultColor: '#73E866', defcircleColor: '#E8F5E9' },
                 'air_humidity': { min: 0, max: 100, defaultColor: '#73E866', defcircleColor: '#E8F5E9' },
@@ -633,7 +744,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 'soil_temperature': { min: -20, max: 80, defaultColor: '#73E866', defcircleColor: '#E8F5E9' },
                 'soil_humidity': { min: 0, max: 100, defaultColor: '#73E866', defcircleColor: '#E8F5E9' },
                 'soil_conductivity': { min: 0, max: 5000, defaultColor: '#73E866', defcircleColor: '#E8F5E9' },
-                'soil_ph': { min: 0, max: 14, defaultColor: '#73E866', defcircleColor: '#E8F5E9' }
+                'soil_ph': { min: 0, max: 14, defaultColor: '#73E866', defcircleColor: '#E8F5E9' },
+                'irrigation_amount': { min: 0, max: 1000, defaultColor: '#33A5FF', defcircleColor: '#E1F5FE' },
+                'tip_total': { min: 0, max: 5000, defaultColor: '#FF9F40', defcircleColor: '#FFF3E0' }
             };
 
             // Loop through the config and update each circle
@@ -698,7 +811,7 @@ document.addEventListener('DOMContentLoaded', () => {
             maintainAspectRatio: false 
         };
         
-        // --- 모든 차트에 공통으로 적용될 x축 옵션 ---
+        // --- common X axis settings ---
         const commonXAxis = {
             type: 'time',
             time: {
@@ -714,14 +827,21 @@ document.addEventListener('DOMContentLoaded', () => {
         charts.weight = createChart('weightChart', { 
             type: 'line', 
             data: { 
-                datasets: [{ label: '무게 (g)', data: [], borderColor: '#8e5ea2', fill: false }] 
+                datasets: [
+                    { label: '총 무게 (g)', data: [], borderColor: '#8e5ea2', yAxisID: 'y_weight', fill: false },
+                    { label: '급수량 (mL)', data: [], borderColor: '#33A5FF', yAxisID: 'y_vol', fill: false, borderDash: [5, 5] }, // 점선
+                    { label: '배액량 (mL)', data: [], borderColor: '#FF9F40', yAxisID: 'y_vol', fill: false }
+                ] 
             }, 
             options: { 
                 ...commonOptions, 
-                title: { display: true, text: '무게' }, 
+                title: { display: true, text: '무게 및 수분량' }, 
                 scales: { 
-                    yAxes: [{ ticks: { suggestedMin: 0 } }],
-                    xAxes: [commonXAxis] // x축 옵션 적용
+                    yAxes: [
+                        { id: 'y_weight', type: 'linear', position: 'left', ticks: { fontColor: '#8e5ea2', suggestedMin: 0 } },
+                        { id: 'y_vol', type: 'linear', position: 'right', ticks: { fontColor: '#33A5FF', suggestedMin: 0 }, gridLines: { drawOnChartArea: false } }
+                    ],
+                    xAxes: [commonXAxis] 
                 } 
             } 
         });
@@ -824,7 +944,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log(`Fetching data for timespan: ${selectedOption}`);
         }
         
-        setStatus('graph-status', 'Loading graph data...', 'info');
+        setStatus('graph-status', '그래프 데이터 로딩중...', 'info');
 
         try {
             const response = await fetchWithTimeout(apiUrl + queryParams);
@@ -836,7 +956,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // --- labels가 아닌 datasets를 확인 ---
             if (!data || !data.datasets || !data.labels || data.labels.length === 0) {
-                setStatus('graph-status', 'No data found for the selected range.', 'info');
+                setStatus('graph-status', '데이터가 없습니.', 'info');
                 Object.values(charts).forEach(chart => {
                     chart.data.datasets.forEach(dataset => dataset.data = []); // 데이터만 비움
                     chart.update();
@@ -856,7 +976,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             const map = {
-                weight: { chart: charts.weight, datasets: [data.datasets.weight] },
+                weight: { chart: charts.weight, datasets: [data.datasets.weight, data.datasets.irrigation, data.datasets.tip_total] },
                 env: { chart: charts.env, datasets: [data.datasets.air_temperature, data.datasets.air_humidity, data.datasets.co2, data.datasets.insolation] },
                 water: { chart: charts.water, datasets: [data.datasets.ph, data.datasets.ec, data.datasets.water_temperature] },
                 soil: { chart: charts.soil, datasets: [data.datasets.soil_temperature, data.datasets.soil_humidity, data.datasets.soil_conductivity, data.datasets.soil_ph] }
@@ -1058,40 +1178,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function performTare() {
-        setStatus('weight-status', '영점을 맞추고 있습니다... 잠시만 기다려 주세요.', 'info');
-        document.getElementById('tare-btn').disabled = true;
-        const result = await performApiAction('tare');
-        if (result.status === 'success') {
-            calibrationState.weight_offset = result.offset;
-            document.getElementById('current-offset').textContent = result.offset.toFixed(2);
-            document.getElementById('calibrate-btn').disabled = false;
-            setStatus('weight-status', '영점 성공!', 'success');
-        } else {
-            setStatus('weight-status', `Error: ${result.message}`, 'error');
-        }
-        document.getElementById('tare-btn').disabled = false;
-    }
 
-    async function performWeightCalibrate() {
-        const knownWeight = parseFloat(document.getElementById('known-weight').value);
-        if (isNaN(knownWeight) || knownWeight <= 0) { setStatus('weight-status', 'Enter a valid weight.', 'error'); return; }
-        setStatus('weight-status', `Calibrating with ${knownWeight}g...`, 'info');
-        document.getElementById('calibrate-btn').disabled = true;
-        const result = await performApiAction('tare');
-        if (result.status === 'success') {
-            const scale = (result.offset - calibrationState.weight_offset) / knownWeight;
-            if (scale === 0) { setStatus('weight-status', 'Calibration failed: scale is zero.', 'error'); } 
-            else {
-                calibrationState.weight_scale = scale;
-                document.getElementById('current-scale').textContent = scale.toFixed(4);
-                setStatus('weight-status', 'Calibration successful!', 'success');
-            }
-        } else {
-            setStatus('weight-status', `Error: ${result.message}`, 'error');
+    async function performWeightCalibrate(point) {
+        const weightValue = parseFloat(document.getElementById(`weight-val-${point}`).value);
+        if (isNaN(weightValue)) { 
+            setStatus('weight-status', `Point ${point} 무게 값이 유효하지 않습니다.`, 'error'); 
+            return; 
         }
-        document.getElementById('calibrate-btn').disabled = false;
-    }
+        setStatus('weight-status', `Raw 값을 읽는 중입니다 (Point ${point})...`, 'info');
+        document.getElementById(`weight-cal-btn-${point}`).disabled = true;
+        
+        // 'tare' 액션은 raw 값을 반환하는 API 콜입니다. (views.py에서 설정됨)
+        const result = await performApiAction('get_weight_raw'); 
+        
+        if (result.status === 'success') {
+            // calibrationState에 pH/EC와 동일한 방식으로 저장합니다.
+            calibrationState[`weight_point${point}_raw`] = result.raw;
+            calibrationState[`weight_point${point}_value`] = weightValue;
+            document.getElementById(`weight-raw-${point}`).textContent = result.raw.toFixed(2);
+            setStatus('weight-status', `Raw 값 (Point ${point})이 기록되었습니다.`, 'success');
+        } else {
+            setStatus('weight-status', `Error: ${result.message}`, 'error');
+        }
+        document.getElementById(`weight-cal-btn-${point}`).disabled = false;
+    }
 
     async function performPhCalibrate(point) {
         const phValue = parseFloat(document.getElementById(`ph-val-${point}`).value);
@@ -1133,42 +1243,95 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error("Server error.");
             const data = await response.json();
             calibrationState = data;
-            document.getElementById('current-offset').textContent = data.weight_offset.toFixed(2);
-            document.getElementById('current-scale').textContent = data.weight_scale.toFixed(4);
-            document.getElementById('ph-val-1').value = data.ph_point1_value.toFixed(1);
-            document.getElementById('ph-volt-1').textContent = data.ph_point1_voltage.toFixed(4);
-            document.getElementById('ph-val-2').value = data.ph_point2_value.toFixed(1);
-            document.getElementById('ph-volt-2').textContent = data.ph_point2_voltage.toFixed(4);
-            document.getElementById('current-ph-slope').textContent = data.ph_slope.toFixed(4);
-            document.getElementById('current-ph-intercept').textContent = data.ph_intercept.toFixed(4);
-            document.getElementById('ec-val-1').value = data.ec_point1_value.toFixed(0);
-            document.getElementById('ec-volt-1').textContent = data.ec_point1_voltage.toFixed(4);
-            document.getElementById('ec-val-2').value = data.ec_point2_value.toFixed(0);
-            document.getElementById('ec-volt-2').textContent = data.ec_point2_voltage.toFixed(4);
-            document.getElementById('current-ec-slope').textContent = data.ec_slope.toFixed(4);
-            document.getElementById('current-ec-intercept').textContent = data.ec_intercept.toFixed(4);
+            
+            // --- Weight ---
+            document.getElementById('current-weight-slope').textContent = data.weight_slope ? data.weight_slope.toFixed(6) : 'N/A';
+            document.getElementById('current-weight-intercept').textContent = data.weight_intercept ? data.weight_intercept.toFixed(2) : 'N/A';
+            document.getElementById('weight-val-1').value = data.weight_point1_value ? data.weight_point1_value.toFixed(0) : '0';
+            document.getElementById('weight-raw-1').textContent = data.weight_point1_raw ? data.weight_point1_raw.toFixed(2) : '...';
+            document.getElementById('weight-val-2').value = data.weight_point2_value ? data.weight_point2_value.toFixed(0) : '1000';
+            document.getElementById('weight-raw-2').textContent = data.weight_point2_raw ? data.weight_point2_raw.toFixed(2) : '...';
+
+            // --- pH ---
+            document.getElementById('ph-val-1').value = data.ph_point1_value ? data.ph_point1_value.toFixed(1) : '7.0';
+            document.getElementById('ph-volt-1').textContent = data.ph_point1_voltage ? data.ph_point1_voltage.toFixed(4) : '...';
+            document.getElementById('ph-val-2').value = data.ph_point2_value ? data.ph_point2_value.toFixed(1) : '4.0';
+            document.getElementById('ph-volt-2').textContent = data.ph_point2_voltage ? data.ph_point2_voltage.toFixed(4) : '...';
+            document.getElementById('current-ph-slope').textContent = data.ph_slope ? data.ph_slope.toFixed(4) : 'N/A';
+            document.getElementById('current-ph-intercept').textContent = data.ph_intercept ? data.ph_intercept.toFixed(4) : 'N/A';
+
+            // --- EC ---
+            document.getElementById('ec-val-1').value = data.ec_point1_value ? data.ec_point1_value.toFixed(0) : '700';
+            document.getElementById('ec-volt-1').textContent = data.ec_point1_voltage ? data.ec_point1_voltage.toFixed(4) : '...';
+            document.getElementById('ec-val-2').value = data.ec_point2_value ? data.ec_point2_value.toFixed(0) : '1500';
+            document.getElementById('ec-volt-2').textContent = data.ec_point2_voltage ? data.ec_point2_voltage.toFixed(4) : '...';
+            document.getElementById('current-ec-slope').textContent = data.ec_slope ? data.ec_slope.toFixed(4) : 'N/A';
+            document.getElementById('current-ec-intercept').textContent = data.ec_intercept ? data.ec_intercept.toFixed(4) : 'N/A';
 
         } catch(error) {
-            console.error("Could not load settings", error);
+            console.error("설정을 로딩할 수 없었습니다", error);
             setStatus('save-status', 'Could not load settings from server.', 'error');
         }
     }
 
     async function saveSettings() {
-        setStatus('save-status', 'Saving...', 'info');
-        try {
-            const response = await fetchWithTimeout('/settings_api/', { method: 'POST', body: JSON.stringify(calibrationState) });
-            const result = await response.json();
-            if (response.ok) {
-                setStatus('save-status', 'Settings saved successfully!', 'success');
-                loadSettings();
-            } else {
-                setStatus('save-status', `Error: ${result.message || 'Server error'}`, 'error');
-            }
-        } catch (error) {
-             setStatus('save-status', 'Save failed. Network error or timeout.', 'error');
-        }
-    }
+        setStatus('save-status', 'Saving...', 'info');
+        
+        // --- 계산 로직 시작 ---
+        function calculateLinearFit(p1_raw, p1_val, p2_raw, p2_val) {
+            // m = (y2 - y1) / (x2 - x1)
+            const slope = (p2_val - p1_val) / (p2_raw - p1_raw);
+            // b = y1 - (m * x1)
+            const intercept = p1_val - (slope * p1_raw);
+            return { slope, intercept };
+        }
+
+        // 1. pH 계산
+        if (calibrationState.ph_point1_voltage && calibrationState.ph_point2_voltage) {
+            const fit = calculateLinearFit(
+                calibrationState.ph_point1_voltage, calibrationState.ph_point1_value,
+                calibrationState.ph_point2_voltage, calibrationState.ph_point2_value
+            );
+            calibrationState.ph_slope = fit.slope;
+            calibrationState.ph_intercept = fit.intercept;
+        }
+
+        // 2. EC 계산
+        if (calibrationState.ec_point1_voltage && calibrationState.ec_point2_voltage) {
+            const fit = calculateLinearFit(
+                calibrationState.ec_point1_voltage, calibrationState.ec_point1_value,
+                calibrationState.ec_point2_voltage, calibrationState.ec_point2_value
+            );
+            calibrationState.ec_slope = fit.slope;
+            calibrationState.ec_intercept = fit.intercept;
+        }
+
+        // 3. 무게(Weight) 계산
+        if (calibrationState.weight_point1_raw && calibrationState.weight_point2_raw) {
+            const fit = calculateLinearFit(
+                calibrationState.weight_point1_raw, calibrationState.weight_point1_value,
+                calibrationState.weight_point2_raw, calibrationState.weight_point2_value
+            );
+            calibrationState.weight_slope = fit.slope;
+            calibrationState.weight_intercept = fit.intercept;
+        }
+        // --- 계산 로직 끝 ---
+
+        try {
+            // 계산된 m, b 값이 포함된 calibrationState를 서버로 전송
+            const response = await fetchWithTimeout('/settings_api/', { method: 'POST', body: JSON.stringify(calibrationState) });
+            const result = await response.json();
+            if (response.ok) {
+                setStatus('save-status', 'Settings saved successfully!', 'success');
+                // UI에 계산된 m, b 값을 즉시 반영하기 위해 loadSettings() 호출
+                loadSettings(); 
+            } else {
+                setStatus('save-status', `Error: ${result.message || 'Server error'}`, 'error');
+            }
+        } catch (error) {
+             setStatus('save-status', 'Save failed. Network error or timeout.', 'error');
+        }
+    }
 
     // --- Initial Load ---
     updateLatestData();
