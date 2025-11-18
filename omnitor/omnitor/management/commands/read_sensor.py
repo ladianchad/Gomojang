@@ -10,7 +10,7 @@ from datetime import datetime
 from django.core.management.base import BaseCommand
 from omnitor.models import SensorData, CalibrationSettings
 
-# --- Settings ---
+# --- 설정 ---
 BAUDRATE = 9600
 MODBUS_PORT = '/dev/ttyUSB0'
 MODBUS_ADDRESS = 1
@@ -19,28 +19,27 @@ SAVE_INTERVAL_SECONDS = 60 # Save data every 60 seconds
 LOOP_SLEEP_SECONDS = 0.1 # Reads sensor data every 0.1 sec
 tip_capacity = 5 # Tipping gauge water capacity = 5mL
 
+# 연결된 시리얼 포트들을 검색해서 Arduino가 포함된 포트 경로를 반환
+# 못 찾으면 기본값 '/dev/ttyACM0'를 반환
 def find_arduino_port():
-    """
-    연결된 시리얼 포트들을 검색해서 Arduino가 포함된 포트 경로를 반환합니다.
-    못 찾으면 기본값 '/dev/ttyACM0'를 반환합니다.
-    """
     ports = serial.tools.list_ports.comports()
     
     for port in ports:
         if "Arduino" in port.description:
             return port.device
-
-        if "ACM" in port.device:
-            return port.device
             
+        if "ACM" in port.device:
+            return port.device   
+    
     return '/dev/ttyACM0'
 
+#
 class Command(BaseCommand):
-    help = 'Reads data from Arduino and Modbus, applies a moving average filter and calibration, and saves to the database every 60 seconds.'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Initialize deques for the moving average filter
+        
+        # 이동 평균 필터를 위한 디큐
         self.data_history = {
             'air_temperature': deque(maxlen=MOVING_AVERAGE_WINDOW),
             'air_humidity': deque(maxlen=MOVING_AVERAGE_WINDOW),
