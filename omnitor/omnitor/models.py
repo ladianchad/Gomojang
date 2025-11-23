@@ -1,5 +1,4 @@
 from django.db import models
-import math
 
 class FarmJournal(models.Model):
     date = models.DateField(primary_key=True)
@@ -76,28 +75,6 @@ class CalibrationSettings(models.Model):
     ec_point2_value = models.FloatField(default=1500.0)
     ec_slope = models.FloatField(default=1.0)
     ec_intercept = models.FloatField(default=0.0)
-
-    def save(self, *args, **kwargs):
-        # Calculate pH slope and intercept
-        v1_ph, v2_ph = self.ph_point1_voltage, self.ph_point2_voltage
-        ph1, ph2 = self.ph_point1_value, self.ph_point2_value
-        if (v2_ph - v1_ph) != 0:
-            self.ph_slope = (ph2 - ph1) / (v2_ph - v1_ph)
-            self.ph_intercept = ph1 - self.ph_slope * v1_ph
-
-        # Calculate EC slope and intercept using the complex formula
-        v1_ec, v2_ec = self.ec_point1_voltage, self.ec_point2_voltage
-        ec1, ec2 = self.ec_point1_value, self.ec_point2_value
-
-        # Apply the polynomial formula to get "base EC" values (assuming 25占쏙옙C for calibration)
-        base_ec1 = (133.42 * math.pow(v1_ec, 3)) - (255.86 * math.pow(v1_ec, 2)) + (857.39 * v1_ec)
-        base_ec2 = (133.42 * math.pow(v2_ec, 3)) - (255.86 * math.pow(v2_ec, 2)) + (857.39 * v2_ec)
-
-        if (base_ec2 - base_ec1) != 0:
-            self.ec_slope = (ec2 - ec1) / (base_ec2 - base_ec1)
-            self.ec_intercept = ec1 - self.ec_slope * base_ec1
-            
-        super().save(*args, **kwargs)
 
     @classmethod
     def load(cls):
