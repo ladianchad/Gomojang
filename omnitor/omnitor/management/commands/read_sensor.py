@@ -74,8 +74,8 @@ class Command(BaseCommand):
 
     def parse_arduino_data(self, serial_line, settings):
         """
-        Parses a comma-separated line from Arduino, applies smoothing and all calibrations.
-        Format: "AirTemp,AirHum,CO2,Insolation,Weight_Raw,pH_V,EC_V,WaterTemp,TipCount"
+        아두이노에서 데이터를 받아서 필터 적용 & 보정
+        데이터 포맷: "AirTemp,AirHum,CO2,Insolation,Weight_Raw,pH_V,EC_V,WaterTemp,TipCount"
         """
         try:
             self.stdout.write(f"[Arduino RAW]: {serial_line.strip()}")
@@ -109,23 +109,58 @@ class Command(BaseCommand):
                 
                 calibrated_data = {}
                 
-                # Weight calibration
-                calibrated_data['weight_calibrated'] = (smoothed_raw_data['weight_raw'] * settings.weight_slope) + settings.weight_intercept if settings.weight_slope is not None and settings.weight_intercept is not None else 0
+                # 무게 2점 보정
+                w_raw = smoothed_raw_data['weight_raw']
+                w_p1_r = settings.weight_point1_raw
+                w_p1_v = settings.weight_point1_value
+                w_p2_r = settings.weight_point2_raw
+                w_p2_v = settings.weight_point2_value
+
+                if (w_p2_r - w_p1_r) != 0:
+                    w_slope = (w_p2_v - w_p1_v) / (w_p2_r - w_p1_r)
+                    w_intercept = w_p1_v - (w_slope * w_p1_r)
+                    calibrated_data['weight_calibrated'] = (w_slope * w_raw) + w_intercept
+                else:
+                    calibrated_data['weight_calibrated'] = 0
+
+                # ph, ec 보정에 필요한 수온 변수
+                current_water_temp = smoothed_raw_data.get('water_temperature', 25.0)
+
+                # ph 보정 (온도 보정 포함)
+                ph_volts = smoothed_raw_data['ph_voltage']
                 
-                # pH Calibration (2-point + temperature compensation)
-                base_ph = (smoothed_raw_data['ph_voltage'] * settings.ph_slope) + settings.ph_intercept
-                temp_diff = smoothed_raw_data['water_temperature'] - 25.0
-                ph_compensation = 0.017 * temp_diff
-                calibrated_data['ph_calibrated'] = base_ph - ph_compensation
+                ph1_val_adj = settings.ph_point1_value - 0.017 * (current_water_temp - 25.0)
+                ph2_val_adj = settings.ph_point2_value - 0.017 * (current_water_temp - 25.0)
+                
+                ph_v1 = settings.ph_point1_voltage
+                ph_v2 = settings.ph_point2_voltage
+                
+                if (ph_v2 - ph_v1) != 0:
+                    ph_slope = (ph2_val_adj - ph1_val_adj) / (ph_v2 - ph_v1)
+                    ph_intercept = ph1_val_adj - (ph_slope * ph_v1)
+                    
+                    calibrated_data['ph_calibrated'] = (ph_slope * ph_volts) + ph_intercept
+                else:
+                    calibrated_data['ph_calibrated'] = 0.0
 
-                # EC Calibration (temp compensation + formula + 2-point)
-                temp_coeff = 1.0 + 0.02 * temp_diff
-                compensated_ec_voltage = smoothed_raw_data['ec_voltage'] / temp_coeff if temp_coeff != 0 else 0
-                v = compensated_ec_voltage
-                base_ec = (133.42 * math.pow(v, 3)) - (255.86 * math.pow(v, 2)) + (857.39 * v)
-                calibrated_data['ec_calibrated'] = (base_ec * settings.ec_slope) + settings.ec_intercept
 
-                # Return original raw data and the final calibrated data
+                # EC 보정 (온도 보정 포함)
+                ec_volts = smoothed_raw_data['ec_voltage']
+                
+                ec1_val_adj = settings.ec_point1_value * (1.0 + 0.02 * (current_water_temp - 25.0))
+                ec2_val_adj = settings.ec_point2_value * (1.0 + 0.02 * (current_water_temp - 25.0))
+
+                ec_v1 = settings.ec_point1_voltage
+                ec_v2 = settings.ec_point2_voltage
+
+                if (ec_v2 - ec_v1) != 0:
+                    ec_slope = (ec2_val_adj - ec1_val_adj) / (ec_v2 - ec_v1)
+                    ec_intercept = ec1_val_adj - (ec_slope * ec_v1)
+                    
+                    calibrated_data['ec_calibrated'] = (ec_slope * ec_volts) + ec_intercept
+                else:
+                    calibrated_data['ec_calibrated'] = 0.0
+                    
                 # 원본 raw 데이터와 최종 보정 데이터를 모두 반환
                 return {**raw_data, **smoothed_raw_data, **calibrated_data}
             
@@ -137,7 +172,7 @@ class Command(BaseCommand):
             return None
 
     def read_modbus_sensor(self, instrument):
-        """Reads data from the Modbus soil sensor and applies smoothing."""
+        """토양 센서에서 데이터를 읽고 필터 적용용"""
         try:
             data = instrument.read_registers(0, 4, 3)
             self.stdout.write(f"[Modbus RAW]: {data}")
@@ -147,7 +182,6 @@ class Command(BaseCommand):
                 'soil_conductivity': float(data[2]),
                 'soil_ph': data[3] / 10.0
             }
-            # Apply moving average to soil data
             return self.apply_smoothing(raw_soil_data)
         except Exception as e:
             self.stderr.write(self.style.ERROR(f"Modbus Read Error: {e}"))
@@ -184,7 +218,6 @@ class Command(BaseCommand):
 
         while True:
             try:
-                # Load latest calibration settings in each loop
                 settings = CalibrationSettings.load()
 
                 if arduino_ser.in_waiting > 0:
@@ -203,12 +236,10 @@ class Command(BaseCommand):
                         # save latest smoothed data to class variable
                         self.latest_smoothed_data = all_data
 
-                # --- save data every 1 min ---
                 current_time = time.time()
                 if (current_time - self.last_save_time) >= SAVE_INTERVAL_SECONDS:
                     if self.latest_smoothed_data:
                         try:
-                            # if value is less than 0, just make it 0
                             data_to_save = {}
                             for key, value in self.latest_smoothed_data.items():
                                 val = self.latest_smoothed_data.get(key)
@@ -267,20 +298,16 @@ class Command(BaseCommand):
                             
                             self.stdout.write(self.style.SUCCESS(f"Saved 1-minute data at {time.strftime('%Y-%m-%d %H:%M:%S')}"))
                             
-                            # reset for next data
                             self.latest_smoothed_data = None
                         
                         except Exception as db_e:
                             self.stderr.write(self.style.ERROR(f"Database save error: {db_e}"))
                     
                     else:
-                        # if there is no new data read in the last 1 min
                         self.stdout.write(self.style.WARNING(f"No new sensor data read in the last minute. Skipping save."))
 
-                    # reset timer
                     self.last_save_time = current_time 
                 
-                # loop to not use CPU 100%
                 time.sleep(LOOP_SLEEP_SECONDS) 
 
             except KeyboardInterrupt:
