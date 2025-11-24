@@ -14,22 +14,18 @@ class FarmJournal(models.Model):
 class SensorData(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     
-    # Air sensors
+    # 환경
     air_temperature = models.FloatField(null=True, blank=True)
     air_humidity = models.FloatField(null=True, blank=True)
     co2 = models.FloatField(null=True, blank=True)
     insolation = models.FloatField(null=True, blank=True)
-    
-    # Water sensors
-    water_temperature = models.FloatField(null=True, blank=True)
-    
-    # Weight
+
+    # 무게
     weight_raw = models.FloatField(null=True, blank=True)
     weight_calibrated = models.FloatField(null=True, blank=True)
-
-    #Tipping gauge
-    tip_count = models.FloatField(null=True, blank=True)
-    tip_total = models.FloatField(null=True, blank=True)
+    
+    # 수온
+    water_temperature = models.FloatField(null=True, blank=True)
     
     # pH
     ph_voltage = models.FloatField(null=True, blank=True)
@@ -39,7 +35,11 @@ class SensorData(models.Model):
     ec_voltage = models.FloatField(null=True, blank=True)
     ec_calibrated = models.FloatField(null=True, blank=True)
 
-    # Soil sensors (from Modbus)
+    # 티핑게이지
+    tip_count = models.FloatField(null=True, blank=True)
+    tip_total = models.FloatField(null=True, blank=True)
+    
+    # 토양 센서서
     soil_temperature = models.FloatField(null=True, blank=True)
     soil_humidity = models.FloatField(null=True, blank=True)
     soil_conductivity = models.FloatField(null=True, blank=True)
@@ -52,7 +52,7 @@ class SensorData(models.Model):
 class CalibrationSettings(models.Model):
     id = models.IntegerField(primary_key=True, default=1, editable=False)
 
-    # Weight settings
+    # 무게 보정
     weight_point1_raw = models.FloatField(default=20000)
     weight_point1_value = models.FloatField(default=0)
     weight_point2_raw = models.FloatField(default=40000)
@@ -60,7 +60,7 @@ class CalibrationSettings(models.Model):
     weight_slope = models.FloatField(default=-21.5)
     weight_intercept = models.FloatField(default=20000)
     
-    # pH two-point calibration data
+    # pH 보정
     ph_point1_voltage = models.FloatField(default=2.5)
     ph_point1_value = models.FloatField(default=7.0)
     ph_point2_voltage = models.FloatField(default=3.0)
@@ -68,7 +68,7 @@ class CalibrationSettings(models.Model):
     ph_slope = models.FloatField(default=-5.8)
     ph_intercept = models.FloatField(default=21.5)
 
-    # EC two-point calibration data
+    # EC 보정
     ec_point1_voltage = models.FloatField(default=0.5)
     ec_point1_value = models.FloatField(default=700.0)
     ec_point2_voltage = models.FloatField(default=1.0)
