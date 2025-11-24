@@ -10,19 +10,19 @@ from .views import (
 )
 
 urlpatterns = [
-    # Dashboard and Sensor APIs
+    # 대시보드 (센서 데이터 관련) API
     path('', sensor_dashboard_view, name='dashboard'),
     path('latest_data_api/', latest_data_api, name='latest_data_api'),
     path('historical_data_api/', historical_data_api, name='historical_data_api'),
 
-    # Calibration APIs
+    # 보정 API
     path('settings_api/', settings_api, name='settings_api'),
     path('calibration_api/', calibration_api, name='calibration_api'),
     
-    # Journal API
+    # 농장 일지 API
     path('journal_api/', journal_api, name='journal_api'),
     
-    # Camera time API
+    # 카메라 API
     path('camera_time_api/', camera_time_api, name='camera_time_api'),
 
 ]
