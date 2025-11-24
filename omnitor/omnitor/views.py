@@ -11,14 +11,14 @@ import statistics
 import math
 import os
 
-# --- Camera Settings Path --
+# 카메라 설정
 BASE_DIR_GOMOJANG = os.path.expanduser("~/gomojang/omnitor") 
 CONFIG_FILE_PATH = os.path.join(BASE_DIR_GOMOJANG, "camera_config.json")
 DEFAULT_CAPTURE_TIME = "12:00"
 
 IMAGE_FILES_DIRECTORY = os.path.join(BASE_DIR_GOMOJANG, "omnitor/static/journal_images/")
 
-# --- Helper Function for Camera Time ---
+# 카메라 시간 조정
 def get_current_capture_time():
     try:
         with open(CONFIG_FILE_PATH, 'r') as f:
@@ -29,10 +29,10 @@ def get_current_capture_time():
     except (FileNotFoundError, json.JSONDecodeError, ValueError):
         return DEFAULT_CAPTURE_TIME
 
-# --- Helper Function for Calibration ---
+# 보정
 def get_reading_from_sensor_file(target_key):
     """
-    target_key 예시: 'weight_raw', 'ph_voltage', 'ec_voltage'
+    보정할 때 센서 값 받는 함수
     """
     # read_sensors.py가 저장하는 파일 위치
     state_file_path = '/tmp/sensor_state.json' 
@@ -58,7 +58,7 @@ def get_reading_from_sensor_file(target_key):
             time.sleep(0.1) # 0.1초 대기 (read_sensors가 0.1초마다 갱신하므로)
             
         except (json.JSONDecodeError, IOError):
-            # 파일이 쓰기 중(Lock)이라 읽기 실패할 수 있음 -> 무시하고 재시도
+            # 파일이 쓰기 중이라 읽기 실패할 수 있음 -> 무시하고 재시도
             time.sleep(0.05)
         except Exception as e:
             print(f"Error reading state file: {e}")
@@ -248,7 +248,7 @@ def historical_data_api(request):
         elif count > 0:
             data_points = list(data_points_qs)
 
-        # [추가됨] 급수량 계산 로직 (그래프용)
+        # 급수량 계산 로직 (그래프용)
         # 리스트를 순회하며 (현재 무게 - 이전 무게)가 양수일 때만 급수량으로 기록
         irrigation_list = []
         prev_weight = None
@@ -352,7 +352,7 @@ def journal_api(request):
             # Provide a more generic error message to the user
             return JsonResponse({'status': 'error', 'message': 'Failed to save journal entry due to a server error.'}, status=500)
 
-# --- Camera Time Setting API ---
+# 카메라 시간 API
 def camera_time_api(request):
     if request.method == 'GET':
         current_time = get_current_capture_time()
