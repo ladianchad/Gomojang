@@ -8,7 +8,7 @@ import serial.tools.list_ports
 from collections import deque
 from datetime import datetime
 from django.core.management.base import BaseCommand
-from omnitor.models import SensorData, CalibrationSettings
+from omnitor.omnitor.models.models import SensorData, CalibrationSettings
 
 # --- 설정 ---
 BAUDRATE = 9600
@@ -57,7 +57,7 @@ class Command(BaseCommand):
         self.last_save_time = 0.0
         self.latest_smoothed_data = None
         self.daily_baseline_tip_count = None # 자정 시점의 아두이노 누적 카운트
-        self.last_reset_date = None # 마지막으로 리셋한 날짜
+        self.last_reset_date = None # 마지막으로 리셋한 날짜
 
     def apply_smoothing(self, data_dict):
         """Applies a moving average to new data and returns the smoothed values."""

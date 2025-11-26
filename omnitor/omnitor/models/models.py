@@ -50,8 +50,6 @@ class SensorData(models.Model):
 
 
 class CalibrationSettings(models.Model):
-    id = models.IntegerField(primary_key=True, default=1, editable=False)
-
     # 무게 보정
     weight_point1_raw = models.FloatField(default=20000)
     weight_point1_value = models.FloatField(default=0)
