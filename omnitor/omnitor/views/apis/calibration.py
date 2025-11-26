@@ -9,7 +9,7 @@ BASE_DIR_GOMOJANG = os.path.expanduser("~/gomojang/omnitor")
 CONFIG_FILE_PATH = os.path.join(BASE_DIR_GOMOJANG, "camera_config.json")
 
 
-def settings_api(request):
+def api_setting(request):
     handlers = {
         "POST": post_handler,
     }
@@ -20,7 +20,7 @@ def settings_api(request):
 
     return handler(request)
 
-api_path = path('calibration_api/', settings_api, name='calibration_api')
+api_path = path('calibration_api/', api_setting, name='calibration_api')
 
 
 def post_handler(request):

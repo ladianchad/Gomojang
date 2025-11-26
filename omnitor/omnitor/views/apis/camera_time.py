@@ -5,14 +5,13 @@ import os
 from django.http import JsonResponse, HttpResponseBadRequest, HttpRequest
 from django.contrib.staticfiles.storage import staticfiles_storage
 
-from omnitor.models.models import CalibrationSettings
-from omnitor.services import camera
+from django.urls import path
 
 
 BASE_DIR_GOMOJANG = os.path.expanduser("~/gomojang/omnitor") 
 CONFIG_FILE_PATH = os.path.join(BASE_DIR_GOMOJANG, "camera_config.json")
 
-def settings_api(request):
+def api_setting(request):
     handlers = {
         "POST": post_handler,
     }
@@ -22,6 +21,8 @@ def settings_api(request):
         return HttpResponseBadRequest("Only POST requests are allowed.")
 
     return handler(request)
+
+api_path = path('calibration_api/', api_setting, name='calibration_api')
 
 def post_handler(request):
     try:

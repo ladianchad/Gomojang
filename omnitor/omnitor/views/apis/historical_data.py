@@ -1,4 +1,30 @@
-def historical_data_api(request):
+import datetime
+import json
+import os
+
+from django.http import JsonResponse, HttpResponseBadRequest, HttpRequest
+from django.contrib.staticfiles.storage import staticfiles_storage
+
+from django.urls import path
+
+
+BASE_DIR_GOMOJANG = os.path.expanduser("~/gomojang/omnitor") 
+CONFIG_FILE_PATH = os.path.join(BASE_DIR_GOMOJANG, "camera_config.json")
+
+def api_setting(request):
+    handlers = {
+        "POST": post_handler,
+    }
+
+    handler = handlers.get(request.method)
+    if handler is None:
+        return HttpResponseBadRequest("Only POST requests are allowed.")
+
+    return handler(request)
+
+api_path = path('calibration_api/', api_setting, name='calibration_api')
+
+def post_handler(request):
     start_date_str = request.GET.get('start_date')
     end_date_str = request.GET.get('end_date')
     timespan = request.GET.get('timespan', None)

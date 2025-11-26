@@ -18,3 +18,5 @@ def get_current_capture_time():
     except (FileNotFoundError, json.JSONDecodeError, ValueError):
         return DEFAULT_CAPTURE_TIME
 
+def capture():
+    pass
