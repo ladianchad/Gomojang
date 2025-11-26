@@ -13,3 +13,8 @@ class OmnitorConfig(AppConfig):
 
         serial = SerialSingleton.instance()
         serial.start()
+
+        from .services import schedule, arduino, image_logging
+        schedule.add_shedule("raw_data_write", 1, arduino.update_serial_data)
+      
+        image_logging.set_image_logging()
