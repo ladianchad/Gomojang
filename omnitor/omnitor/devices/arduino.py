@@ -67,13 +67,12 @@ class ArduinoSerial:
         buffer = []
         while self.running:
             try:
-                msg = self.write_queue.get()
                 if self.ser.in_waiting > 0:
                   chunk = self.ser.read(self.ser.in_waiting)
                   buffer.extend(chunk)
                   # 계속 패킷 추출
                   while True:
-                      payload = extract_packet(buffer)
+                      payload = self.extract_packet(buffer)
                       if payload is None:
                           break
                       with self.lock :
