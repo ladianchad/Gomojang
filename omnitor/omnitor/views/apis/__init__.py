@@ -1,15 +1,15 @@
-import calibration
-import camera_time
-import current_data
-import historical_data
-import journal
-import setting
+from .calibration import api_path as calibration_api_path
+from .camera_time import api_path as camera_time_api_path
+from .current_data import api_path as current_data_api_path
+from .historical_data import api_path as historical_data_api_path
+from .journal import api_path as journal_api_path
+from .setting import api_path as setting_api_path
 
 urlpatterns = [
-    calibration.api_path,
-    camera_time.api_path,
-    current_data.api_path,
-    historical_data.api_path,
-    journal.api_path,
-    setting.api_path
+    calibration_api_path,
+    camera_time_api_path,
+    current_data_api_path,
+    historical_data_api_path,
+    journal_api_path,
+    setting_api_path
 ]

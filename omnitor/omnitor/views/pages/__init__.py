@@ -1,4 +1,5 @@
-import dashboard
+from .dashboard import api_path as dashboard_api_path
+
 urlpatterns = [
-    dashboard.api_path,
+    dashboard_api_path,
 ]
